@@ -1,6 +1,7 @@
 const express = require("express");
-const Carousel = require("../models/carousels");
 const multer = require("multer");
+
+const Carousel = require("../models/carouselModel");
 
 const router = express.Router();
 

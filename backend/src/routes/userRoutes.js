@@ -1,12 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require("../models/user");
-const Products = require("../models/products");
-const Wishlist = require("../models/wishlist");
-const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
-const Address = require("../models/address");
+const nodemailer = require("nodemailer");
+
+const User = require("../models/userModel");
+const Products = require("../models/productModel");
+const Wishlist = require("../models/wishlistModel");
+const Address = require("../models/addressModel");
 
 const router = express.Router();
 
