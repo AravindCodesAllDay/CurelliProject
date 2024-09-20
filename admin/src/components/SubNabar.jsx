@@ -7,7 +7,7 @@ export default function SubNavbar({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("token");
     const verifyToken = async () => {
       try {
         if (!token) {
@@ -30,7 +30,7 @@ export default function SubNavbar({ children }) {
   }, [navigate]);
 
   const signout = () => {
-    sessionStorage.clear();
+    localStorage.clear();
     navigate("/");
   };
   return (

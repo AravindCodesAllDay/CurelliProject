@@ -1,96 +1,15 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const otpGenerator = require("otp-generator");
-const nodemailer = require("nodemailer");
-
-const User = require("../models/userModel");
-const Products = require("../models/productModel");
-const Wishlist = require("../models/wishlistModel");
-const Address = require("../models/addressModel");
+const {
+  googleLogin,
+  register,
+  getUser,
+} = require("../controllers/userController");
 
 const router = express.Router();
 
-router.post("/google", async (req, res) => {
-  try {
-    const { name, mail } = req.body;
-
-    if (!name || !mail) {
-      return res.status(400).json({
-        message: "All required fields must be provided.",
-      });
-    }
-
-    const newUser = {
-      name,
-      mail,
-    };
-
-    const user = await User.create(newUser);
-
-    return res.status(201).json(user);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-router.post("/", async (req, res) => {
-  try {
-    const { name, mail, phone, pswd } = req.body;
-
-    if (!name || !mail || !phone || !pswd) {
-      return res.status(400).json({
-        message: "All required fields must be provided.",
-      });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(mail)) {
-      return res.status(400).json({
-        message: "Invalid email format.",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(pswd, 10);
-
-    const newUser = {
-      name,
-      mail,
-      phone,
-      pswd: hashedPassword,
-    };
-
-    const user = await User.create(newUser);
-
-    return res.status(201).json(user);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-router.get("/:identifier", async (req, res) => {
-  try {
-    const { identifier } = req.params;
-    let user;
-
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
-      user = await User.findOne({ _id: identifier });
-    } else {
-      user = await User.findOne({ mail: identifier });
-    }
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json(user);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-});
+router.post("/google", googleLogin);
+router.post("/", register);
+router.get("/:identifier", getUser);
 
 router.put("/changepswd/:userId", async (req, res) => {
   try {

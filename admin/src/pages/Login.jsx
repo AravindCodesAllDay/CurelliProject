@@ -27,7 +27,7 @@ const Login = () => {
 
       if (response.ok) {
         const { token } = await response.json();
-        sessionStorage.setItem("token", token);
+        localStorage.setItem("token", token);
         navigate("/viewproducts");
       } else {
         const subAdminResponse = await fetch(
@@ -41,7 +41,7 @@ const Login = () => {
 
         if (subAdminResponse.ok) {
           const { token } = await subAdminResponse.json();
-          sessionStorage.setItem("token", token);
+          localStorage.setItem("token", token);
           navigate("/orders");
         } else {
           toast.error("Invalid email or password");
@@ -101,7 +101,7 @@ const Login = () => {
             }
 
             const { token } = await loginRes.json();
-            sessionStorage.setItem("token", token);
+            localStorage.setItem("token", token);
             navigate("/orders");
           } catch (error) {
             console.error("Error during login:", error.message);

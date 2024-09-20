@@ -7,8 +7,10 @@ const userRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
 const bestsellerRoutes = require("./routes/bestsellerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
 const carouselRoutes = require("./routes/carouselRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const subadminRoutes = require("./routes/subadminRoutes");
+const tokenRoutes = require("./routes/tokenRoutes");
 
 const app = express();
 
@@ -48,8 +50,10 @@ app.use("/users", userRoutes);
 app.use("/orders", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/bestseller", bestsellerRoutes);
-app.use("/admin", adminRoutes);
 app.use("/carousel", carouselRoutes);
+app.use("/admin", adminRoutes);
+app.use("/subadmin", subadminRoutes);
+app.use("/token", tokenRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(
   "/carouselImg",

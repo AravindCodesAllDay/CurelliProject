@@ -7,32 +7,42 @@ export default function Navbar({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     const verifyToken = async () => {
-      try {
-        if (!token) {
-          throw new Error("Token not found");
-        }
+      if (!token) {
+        console.error("Token not found");
+        navigate("/"); // Redirect if token is not found
+        return;
+      }
 
+      try {
         const response = await fetch(
           `${import.meta.env.VITE_API}admin/verify/${token}`
         );
 
         if (!response.ok) {
+          // If the token is invalid or expired, show error and redirect
           throw new Error("Failed to verify token");
+        }
+
+        // Optionally handle the case where token verification is successful
+        const result = await response.json();
+        if (!result.valid) {
+          throw new Error("Invalid token");
         }
       } catch (error) {
         console.error("Error verifying token:", error);
-        navigate("/");
+        navigate("/"); // Redirect to login page if verification fails
       }
     };
+
     verifyToken();
   }, [navigate]);
 
   const signout = () => {
-    sessionStorage.clear();
-    navigate("/");
+    localStorage.clear(); // Clear the token
+    navigate("/"); // Redirect to login page
   };
 
   return (
@@ -49,78 +59,39 @@ export default function Navbar({ children }) {
         </div>
         <div className="flex items-center justify-between px-4 lg:px-10 py-4 lg:py-13 relative w-full bg-[#40773b]">
           <div className="flex items-center gap-[16px] relative">
-            <div
-              className={`text-[16px] ${
-                location.pathname === "/viewproducts"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/viewproducts`}>ViewProduct</Link>
-            </div>
-            <div
-              className={`text-[16px] ${
-                location.pathname === "/add"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/add`}>AddProduct</Link>
-            </div>
-            <div
-              className={`text-[16px] ${
-                location.pathname === "/viewusers"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/viewusers`}>ViewUsers</Link>
-            </div>
-            <div
-              className={` text-[16px] ${
-                location.pathname === "/addcarousel"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/addcarousel`}>AddCarousel</Link>
-            </div>
-            <div
-              className={` text-[16px] ${
-                location.pathname === "/popularproducts"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/popularproducts`}>PopularProducts</Link>
-            </div>
-            <div
-              className={` text-[16px] ${
-                location.pathname === "/vieworders"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/vieworders`}>ViewOrders</Link>
-            </div>
-            <div
-              className={` text-[16px] ${
-                location.pathname === "/viewsubadmins"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/viewsubadmins`}>ViewSubAdmins</Link>
-            </div>
-            <div
-              className={` text-[16px] ${
-                location.pathname === "/addsubadmin"
-                  ? "text-[#6b986a]"
-                  : "hover:text-[#6b986a] text-white"
-              }`}
-            >
-              <Link to={`/addsubadmin`}>AddSubAdmin</Link>
-            </div>
+            {/* Dynamic menu items */}
+            <MenuItem
+              label="ViewProduct"
+              path="/viewproducts"
+              location={location}
+            />
+            <MenuItem label="AddProduct" path="/add" location={location} />
+            <MenuItem label="ViewUsers" path="/viewusers" location={location} />
+            <MenuItem
+              label="AddCarousel"
+              path="/addcarousel"
+              location={location}
+            />
+            <MenuItem
+              label="PopularProducts"
+              path="/popularproducts"
+              location={location}
+            />
+            <MenuItem
+              label="ViewOrders"
+              path="/vieworders"
+              location={location}
+            />
+            <MenuItem
+              label="ViewSubAdmins"
+              path="/viewsubadmins"
+              location={location}
+            />
+            <MenuItem
+              label="AddSubAdmin"
+              path="/addsubadmin"
+              location={location}
+            />
           </div>
           <div>
             <button
@@ -134,5 +105,19 @@ export default function Navbar({ children }) {
       </div>
       {children}
     </>
+  );
+}
+
+function MenuItem({ label, path, location }) {
+  return (
+    <div
+      className={`text-[16px] ${
+        location.pathname === path
+          ? "text-[#6b986a]"
+          : "hover:text-[#6b986a] text-white"
+      }`}
+    >
+      <Link to={path}>{label}</Link>
+    </div>
   );
 }
