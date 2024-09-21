@@ -1,31 +1,5 @@
 const User = require("../models/userModel");
-const Products = require("../models/productModel");
-const Wishlist = require("../models/wishlistModel");
-const Address = require("../models/addressModel");
 const bcrypt = require("bcrypt");
-const otpGenerator = require("otp-generator");
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.zoho.in",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "contact@curellifoods.com",
-    pass: "Curellifoods@2023",
-  },
-});
-
-const sendOTP = async (email, otp) => {
-  const mailOptions = {
-    from: "contact@curellifoods.com",
-    to: email,
-    subject: "Verification from Curelli",
-    text: `Your OTP is: ${otp}`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
 
 exports.googleLogin = async (req, res) => {
   try {
@@ -76,5 +50,36 @@ exports.getUser = async (req, res) => {
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.changePswd = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const newPswd = req.body.newPswd;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const hashedPassword = await bcrypt.hash(newPswd, 10);
+    user.pswd = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: error.message });
   }
 };
