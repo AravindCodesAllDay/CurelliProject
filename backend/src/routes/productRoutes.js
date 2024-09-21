@@ -4,7 +4,11 @@ const AWS = require("aws-sdk");
 const Products = require("../models/productModel");
 
 const router = express.Router();
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -32,10 +36,12 @@ router.post(
               ContentType: file.mimetype,
             })
             .promise();
-
+          console.log(s3Upload);
           images.push(s3Upload.Location);
         }
       }
+
+      console.log("Images array after upload:", images);
 
       const newProduct = new Products({
         name,
@@ -43,7 +49,7 @@ router.post(
         description,
         rating,
         numOfRating,
-        photo: images,
+        photos: images,
       });
 
       const product = await newProduct.save();

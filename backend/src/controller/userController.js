@@ -82,6 +82,17 @@ exports.getUser = async (req, res) => {
   }
 };
 
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.changePswd = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -99,16 +110,5 @@ exports.changePswd = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-exports.getUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
-
-    return res.status(200).json(users);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: error.message });
   }
 };

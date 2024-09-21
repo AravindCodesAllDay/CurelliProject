@@ -1,28 +1,32 @@
 const express = require("express");
+const nodemailer = require("nodemailer");
 const {
   googleLogin,
   register,
   getUser,
   changePswd,
   getUsers,
-} = require("../controllers/userController");
+  login,
+} = require("../controller/userController");
+
 const {
   addCart,
   removeCart,
   cartQuantity,
   emptyCart,
 } = require("../controller/cartController");
+
 const {
   addWishlist,
   removeWishlist,
 } = require("../controller/wishlistController");
+
 const {
   userDetails,
   addAddress,
   removeAddress,
   getAddress,
 } = require("../controller/profileController");
-const { login } = require("../controller/userController");
 
 const router = express.Router();
 

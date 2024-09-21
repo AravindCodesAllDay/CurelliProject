@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 
 const userRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
@@ -54,19 +53,6 @@ app.use("/carousel", carouselRoutes);
 app.use("/admin", adminRoutes);
 app.use("/subadmin", subadminRoutes);
 app.use("/token", tokenRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-app.use(
-  "/carouselImg",
-  express.static(path.join(__dirname, "../uploads/carousels"))
-);
-
-const AWS = require("aws-sdk");
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
 
 const start = async () => {
   try {
