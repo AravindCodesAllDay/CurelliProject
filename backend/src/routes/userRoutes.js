@@ -22,6 +22,7 @@ const {
   removeAddress,
   getAddress,
 } = require("../controller/profileController");
+const { login } = require("../controller/userController");
 
 const router = express.Router();
 
@@ -30,6 +31,7 @@ router.get("/:identifier", getUser);
 
 router.post("/google", googleLogin);
 
+router.post("/login", login);
 router.post("/", register);
 router.put("/changepswd/:userId", changePswd);
 

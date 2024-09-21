@@ -1,61 +1,52 @@
 const express = require("express");
 const multer = require("multer");
-
+const AWS = require("aws-sdk");
 const Products = require("../models/productModel");
 
 const router = express.Router();
+const s3 = new AWS.S3();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.post(
   "/",
-  upload.fields([
-    { name: "coverImage", maxCount: 1 },
-    { name: "images", maxCount: 5 },
-  ]),
+  upload.fields([{ name: "images", maxCount: 5 }]),
   async (req, res) => {
     try {
       const { name, price, description, rating, numOfRating } = req.body;
 
-      if (
-        !name ||
-        !price ||
-        !description ||
-        !price ||
-        !rating ||
-        !numOfRating
-      ) {
+      if (!name || !price || !description || !rating || !numOfRating) {
         return res.status(400).send("Missing required fields");
       }
 
       let images = [];
-      console.log(req.files["images"]);
 
-      const coverImage = req.files["coverImage"][0].filename;
-      images = req.files["images"].map((file) => file.filename);
+      if (req.files["images"]) {
+        for (let file of req.files["images"]) {
+          const s3Upload = await s3
+            .upload({
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: `products/${Date.now()}_${file.originalname}`,
+              Body: file.buffer,
+              ContentType: file.mimetype,
+            })
+            .promise();
 
-      // Create a new product object
+          images.push(s3Upload.Location);
+        }
+      }
+
       const newProduct = new Products({
         name,
         price,
         description,
         rating,
         numOfRating,
-        photo: coverImage,
-        moreImg: images,
+        photo: images,
       });
 
       const product = await newProduct.save();
-
       res.status(201).json(product);
     } catch (err) {
       console.error("Error uploading images:", err.message);
@@ -63,45 +54,6 @@ router.post(
     }
   }
 );
-
-router.post("/test", async (req, res) => {
-  try {
-    const {
-      name,
-      price,
-      description,
-      rating,
-      numOfRating,
-      coverImage,
-      images,
-    } = req.body;
-
-    console.log(
-      name,
-      price,
-      description,
-      rating,
-      numOfRating,
-      coverImage,
-      images
-    );
-    const newProduct = new Products({
-      name: name,
-      price: price,
-      photo: coverImage,
-      moreImg: images,
-      description: description,
-      rating: rating,
-      numOfRating: numOfRating,
-    });
-
-    const product = await Products.create(newProduct);
-    return res.status(200).send(product);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).send("Internal Server Error...!!");
-  }
-});
 
 router.get("/", async (req, res) => {
   try {
@@ -171,5 +123,7 @@ router.delete("/:_id", async (req, res) => {
     return res.status(500).send({ message: error.message });
   }
 });
+
+module.exports = router;
 
 module.exports = router;

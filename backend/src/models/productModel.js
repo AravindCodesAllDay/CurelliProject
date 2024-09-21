@@ -8,10 +8,7 @@ const productSchema = new mongoose.Schema({
   rating: {
     type: Number,
   },
-  photo: {
-    type: String,
-  },
-  moreImg: {
+  photos: {
     type: Array,
   },
   description: {

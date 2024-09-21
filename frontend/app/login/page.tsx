@@ -25,45 +25,36 @@ const LoginForm = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${mail}`
+        `${process.env.NEXT_PUBLIC_API_URL}/users/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-type": "application/json",
+          },
+          body: JSON.stringify({
+            mail: mail,
+            pswd: pswd,
+          }),
+        }
       );
       if (!response.ok) {
-        throw new Error("User not found");
+        throw new Error("login failed");
       }
 
       const user = await response.json();
-      const tablePassword = user.pswd;
 
-      const passwordsMatch = await comparePasswords(pswd, tablePassword);
+      toast.success("Login Successful", {
+        position: "top-center",
+      });
 
-      if (passwordsMatch) {
-        toast.success("Login Successful", {
-          position: "top-center",
-        });
-
-        localStorage.setItem("id", user._id);
-        localStorage.setItem("name", user.name);
-        router.push("/");
-      } else {
-        setWrongPswd(true);
-      }
+      localStorage.setItem("id", user._id);
+      localStorage.setItem("name", user.name);
+      router.push("/");
     } catch (error: any) {
       console.error("Error during login:", error.message);
       toast.error("Error during login, try again later", {
         position: "top-center",
       });
-    }
-  };
-
-  const comparePasswords = async (
-    enteredPassword: string,
-    hashedPassword: string
-  ) => {
-    try {
-      return enteredPassword === hashedPassword;
-    } catch (error: any) {
-      console.error("Error comparing passwords:", error.message);
-      return false;
     }
   };
 
@@ -85,34 +76,24 @@ const LoginForm = () => {
           }
         )
         .then(async (res) => {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/users/${res.data.email}`
+          const result = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/users/google`,
+            {
+              method: "POST",
+              headers: {
+                "Content-type": "application/json",
+              },
+              body: JSON.stringify({
+                mail: res.data.email,
+                name: res.data.name,
+              }),
+            }
           );
-          if (response.ok) {
-            const data = await response.json();
+          if (result.ok) {
+            const data = await result.json();
             localStorage.setItem("id", data._id);
             localStorage.setItem("name", data.name);
             router.push("/");
-          } else {
-            const result = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/users/google`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-type": "application/json",
-                },
-                body: JSON.stringify({
-                  mail: res.data.email,
-                  name: res.data.name,
-                }),
-              }
-            );
-            if (result.ok) {
-              const data = await result.json();
-              localStorage.setItem("id", data._id);
-              localStorage.setItem("name", data.name);
-              router.push("/");
-            }
           }
         })
         .catch((err) => console.log(err))
@@ -148,10 +129,11 @@ const LoginForm = () => {
                 onChange={(e) => setPswd(e.target.value)}
                 placeholder="Password"
                 className={`input-field border-[1px] p-2 rounded border-[#0d5b41] w-full ${
-                  wrongPswd ? "border-red-800" : ""
+                  wrongPswd ? "border-red-800" : "border-[#0d5b41]"
                 }`}
                 required
               />
+
               <FaEye
                 onClick={() => setShowPswd(!showPswd)}
                 className="cursor-pointer absolute right-0 top-1/2 transform -translate-y-1/2 mr-2"

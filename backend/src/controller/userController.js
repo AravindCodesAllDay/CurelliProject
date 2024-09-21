@@ -9,8 +9,37 @@ exports.googleLogin = async (req, res) => {
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
+    const user = await User.findOne({ mail: mail });
+    if (user) {
+      return res.status(201).json(user);
+    }
     const newUser = { name, mail };
-    const user = await User.create(newUser);
+    const newuser = await User.create(newUser);
+    return res.status(201).json(newuser);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { pswd, mail } = req.body;
+    if (!pswd || !mail) {
+      return res
+        .status(400)
+        .json({ message: "All required fields must be provided." });
+    }
+    const user = await User.findOne({ mail: mail });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const tablePassword = user.pswd;
+
+    const passwordsMatch = await bcrypt.compare(pswd, tablePassword);
+
+    if (!passwordsMatch) {
+      return res.status(400).json({ message: "password doesn't match" });
+    }
     return res.status(201).json(user);
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });

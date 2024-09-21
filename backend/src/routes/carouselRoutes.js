@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-
 const {
   getCarousel,
   addCarousel,
@@ -8,18 +7,10 @@ const {
 
 const router = express.Router();
 
-const carouselStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/carousels");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
-const carouselUpload = multer({ storage: carouselStorage });
+const carouselUpload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", getCarousel);
+
 router.post(
   "/",
   carouselUpload.fields([

@@ -1,4 +1,6 @@
 const Carousel = require("../models/carouselModel");
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3();
 
 async function getCarousel(req, res, next) {
   try {
@@ -12,40 +14,49 @@ async function getCarousel(req, res, next) {
 
 async function addCarousel(req, res, next) {
   try {
-    const carouselImageName1 = req.files["carouselImage1"][0].filename;
-    const carouselImageName2 = req.files["carouselImage2"][0].filename;
-    const carouselImageName3 = req.files["carouselImage3"][0].filename;
-    const carouselImageName4 = req.files["carouselImage4"][0].filename;
-    const mobileCarouselImageName1 =
-      req.files["mobileCarouselImage1"][0].filename;
-    const mobileCarouselImageName2 =
-      req.files["mobileCarouselImage2"][0].filename;
-    const mobileCarouselImageName3 =
-      req.files["mobileCarouselImage3"][0].filename;
-    const mobileCarouselImageName4 =
-      req.files["mobileCarouselImage4"][0].filename;
+    const uploadToS3 = async (file, index, isMobile = false) => {
+      const s3Upload = await s3
+        .upload({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `carousel/${Date.now()}_${file.originalname}`, // Customize path and filename
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        })
+        .promise();
 
-    const carouselInserts = [
-      { photo: carouselImageName1, index: 1 },
-      { photo: carouselImageName2, index: 2 },
-      { photo: carouselImageName3, index: 3 },
-      { photo: carouselImageName4, index: 4 },
-      { photo: mobileCarouselImageName1, mobile: true, index: 1 },
-      { photo: mobileCarouselImageName2, mobile: true, index: 2 },
-      { photo: mobileCarouselImageName3, mobile: true, index: 3 },
-      { photo: mobileCarouselImageName4, mobile: true, index: 4 },
+      return {
+        photo: s3Upload.Location,
+        index: index,
+        mobile: isMobile,
+      };
+    };
+
+    // Upload all images to S3
+    const carouselImages = [
+      { file: req.files["carouselImage1"][0], index: 1 },
+      { file: req.files["carouselImage2"][0], index: 2 },
+      { file: req.files["carouselImage3"][0], index: 3 },
+      { file: req.files["carouselImage4"][0], index: 4 },
+      { file: req.files["mobileCarouselImage1"][0], index: 1, mobile: true },
+      { file: req.files["mobileCarouselImage2"][0], index: 2, mobile: true },
+      { file: req.files["mobileCarouselImage3"][0], index: 3, mobile: true },
+      { file: req.files["mobileCarouselImage4"][0], index: 4, mobile: true },
     ];
 
+    // Array of promises for S3 uploads
+    const carouselInserts = await Promise.all(
+      carouselImages.map((image) =>
+        uploadToS3(image.file, image.index, image.mobile)
+      )
+    );
+
+    // Clear old carousel images
     await Carousel.deleteMany({});
 
-    try {
-      await Carousel.create(carouselInserts);
+    // Insert new carousel images with S3 URLs
+    await Carousel.create(carouselInserts);
 
-      res.status(200).send("Images inserted successfully.");
-    } catch (error) {
-      res.status(500).send("Error inserting images.");
-      console.error("Error inserting images:", error);
-    }
+    res.status(200).send("Images inserted successfully.");
   } catch (error) {
     res.status(500).send("Error processing request.");
     console.error("Error processing request:", error);
