@@ -1,13 +1,11 @@
 const mongoose = require("mongoose");
 
 const carouselSchema = new mongoose.Schema({
-  photo: {
-    type: String,
-    required: true,
+  images: {
+    type: [String],
   },
   mobile: {
     type: Boolean,
-    required: true,
   },
 });
 

@@ -7,22 +7,14 @@ const {
 
 const router = express.Router();
 
-const carouselUpload = multer({ storage: multer.memoryStorage() });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 router.get("/", getCarousel);
 
 router.post(
   "/",
-  carouselUpload.fields([
-    { name: "carouselImage1", maxCount: 1 },
-    { name: "carouselImage2", maxCount: 1 },
-    { name: "carouselImage3", maxCount: 1 },
-    { name: "carouselImage4", maxCount: 1 },
-    { name: "mobileCarouselImage1", maxCount: 1 },
-    { name: "mobileCarouselImage2", maxCount: 1 },
-    { name: "mobileCarouselImage3", maxCount: 1 },
-    { name: "mobileCarouselImage4", maxCount: 1 },
-  ]),
+  upload.fields([{ name: "images", maxCount: 10 }]),
   addCarousel
 );
 

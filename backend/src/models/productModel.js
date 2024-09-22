@@ -22,13 +22,14 @@ const productSchema = new mongoose.Schema({
   categories: {
     type: Array,
   },
-  stock: {
-    type: Boolean,
-    default: true,
+  status: {
+    type: String,
+    enum: ["inStock", "noStock", "suspended"],
+    default: "inStock",
   },
   offerPrice: {
     type: Number,
   },
 });
 
-module.exports = mongoose.model("Products", productSchema);
+module.exports = mongoose.model("Product", productSchema);
