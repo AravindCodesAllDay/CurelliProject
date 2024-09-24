@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import Header from "../_components/Header";
 
 export default function Orders() {
-  const userId = localStorage.getItem("id");
-  const [Orders, setOrders] = useState({
+  const [userId, setUserId] = useState<string | null>(null);
+  const [orders, setOrders] = useState({
     pending: [],
     completed: [],
     cancelled: [],
@@ -15,8 +15,20 @@ export default function Orders() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if running on the client and retrieve user ID from localStorage
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch orders only if userId is available
     const fetchDetails = async () => {
+      if (!userId) return;
+
       try {
+        setLoading(true);
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/orders/${userId}`
         );
@@ -25,8 +37,9 @@ export default function Orders() {
         }
         const data = await res.json();
         setOrders(data);
+        setError(null);
       } catch (error) {
-        console.error("Error fetching user details:", error);
+        console.error("Error fetching user orders:", error);
         setError(
           error instanceof Error ? error.message : "An unknown error occurred"
         );
@@ -34,27 +47,33 @@ export default function Orders() {
         setLoading(false);
       }
     };
+
     fetchDetails();
   }, [userId]);
 
-  if (loading)
+  // Decide which orders to show based on the tab selected
+  let ordersToShow = orders.pending;
+  if (showCompletedOrders) {
+    ordersToShow = orders.completed;
+  } else if (showCancelledOrders) {
+    ordersToShow = orders.cancelled;
+  }
+
+  // Loading and error handling
+  if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
         Loading...
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <div className="h-screen flex items-center justify-center">
         Error: {error}
       </div>
     );
-
-  let ordersToShow = Orders.pending;
-  if (showCompletedOrders) {
-    ordersToShow = Orders.completed;
-  } else if (showCancelledOrders) {
-    ordersToShow = Orders.cancelled;
   }
 
   return (
@@ -67,56 +86,55 @@ export default function Orders() {
               !showCompletedOrders && !showCancelledOrders
                 ? "bg-[#40773b] text-white"
                 : "bg-white text-[#40773b]"
-            } `}
+            }`}
             onClick={() => {
               setShowCompletedOrders(false);
               setShowCancelledOrders(false);
             }}
           >
-            <h2>Pending Orders</h2>
+            Pending Orders
           </button>
           <button
             className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
               showCompletedOrders
                 ? "bg-[#40773b] text-white"
                 : "bg-white text-[#40773b]"
-            } `}
+            }`}
             onClick={() => {
               setShowCompletedOrders(true);
               setShowCancelledOrders(false);
             }}
           >
-            <h2>Completed Orders</h2>
+            Completed Orders
           </button>
           <button
             className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
               showCancelledOrders
                 ? "bg-[#40773b] text-white"
                 : "bg-white text-[#40773b]"
-            } `}
+            }`}
             onClick={() => {
               setShowCompletedOrders(false);
               setShowCancelledOrders(true);
             }}
           >
-            <h2>Cancelled Orders</h2>
+            Cancelled Orders
           </button>
         </div>
+
         <div className="space-y-8">
-          {ordersToShow && ordersToShow.length === 0 ? (
+          {ordersToShow.length === 0 ? (
             <div>No orders found.</div>
           ) : (
-            ordersToShow &&
             ordersToShow.map((order: any, index: number) => (
               <div key={index} className="bg-white rounded shadow-md">
                 <div className="flex w-full p-4 items-center bg-green-700 text-white">
-                  <div className="flex items-center ">
-                    <span className=" font-semibold inline">OrderId:</span>
+                  <div className="flex items-center">
+                    <span className="font-semibold inline">OrderId: </span>
                     <span className="inline">{order._id}</span>
                   </div>
-
                   <div className="flex items-center justify-end w-full">
-                    <span className="font-semibold inline">Date:</span>
+                    <span className="font-semibold inline">Date: </span>
                     <span className="inline"> {order.date}</span>
                   </div>
                 </div>
@@ -130,8 +148,8 @@ export default function Orders() {
                   </thead>
                   <tbody>
                     {order.products.map((product: any, index: number) => (
-                      <tr key={index} className="border-b ">
-                        <td className="py-2 ">
+                      <tr key={index} className="border-b">
+                        <td className="py-2">
                           <img
                             src={product.productId.photos[0]}
                             alt={product.productId.name}

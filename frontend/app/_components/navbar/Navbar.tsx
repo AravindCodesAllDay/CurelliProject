@@ -14,11 +14,16 @@ import img1 from "../../_assets/Logo_02.png";
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const userId =
-    typeof window !== "undefined" ? localStorage.getItem("id") : null;
+  const [userId, setUserId] = useState<string | null>(null);
   const [isUserIdPresent, setIsUserIdPresent] = useState(false);
   const [showOffCanvasMenu, setShowOffCanvasMenu] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
   useEffect(() => {
     const handleSubmission = async () => {
       try {

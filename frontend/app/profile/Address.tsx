@@ -7,7 +7,7 @@ import AddAddressModal from "../_components/AddAddressModal";
 import Image from "next/image";
 
 export default function Address() {
-  const userId = localStorage.getItem("id");
+  const [userId, setUserId] = useState<string | null>(null);
   const [addressDetails, setAddressDetails] = useState<any[]>([]);
   const [addModal, setAddModal] = useState<boolean>(false);
   const [showModalComplete, setShowModalComplete] = useState<boolean>(false);
@@ -30,6 +30,13 @@ export default function Address() {
       toast.error("Failed to fetch user details");
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
   useEffect(() => {
     fetchDetails();
   }, [userId, fetchDetails]);

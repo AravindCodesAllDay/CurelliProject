@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
 export default function ProfileDetails() {
-  const userId = localStorage.getItem("id");
+  const [userId, setUserId] = useState<string | null>(null);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -13,6 +13,12 @@ export default function ProfileDetails() {
     dob: "",
   });
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
   useEffect(() => {
     const fetchDetails = async () => {
       if (!userId) return;

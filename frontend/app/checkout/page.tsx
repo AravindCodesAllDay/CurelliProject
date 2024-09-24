@@ -25,8 +25,7 @@ interface Address {
 
 const Checkout: React.FC = () => {
   const router = useRouter();
-  const userId =
-    typeof window !== "undefined" ? localStorage.getItem("id") || "" : "";
+  const [userId, setUserId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [userAddress, setUserAddress] = useState<Address[]>([]);
   const [addModal, setAddModal] = useState(false);
@@ -55,7 +54,12 @@ const Checkout: React.FC = () => {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
   useEffect(() => {
     if (userId) {
       fetchCartAddressDetails();

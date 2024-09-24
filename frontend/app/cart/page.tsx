@@ -17,8 +17,7 @@ interface CartItem {
 
 const Cart: React.FC = () => {
   const router = useRouter();
-  const userId =
-    typeof window !== "undefined" ? localStorage.getItem("id") || "" : "";
+  const [userId, setUserId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +72,13 @@ const Cart: React.FC = () => {
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
 
   useEffect(() => {
     if (userId) {

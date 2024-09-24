@@ -17,7 +17,7 @@ interface WishlistItem {
 
 const Wishlist = () => {
   const router = useRouter();
-  const userId = localStorage.getItem("id");
+  const [userId, setUserId] = useState<string | null>(null);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
 
   const fetchWishDetails = async () => {
@@ -38,6 +38,12 @@ const Wishlist = () => {
     }
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("id");
+      setUserId(storedUserId);
+    }
+  }, []);
   useEffect(() => {
     if (userId) {
       fetchWishDetails();
