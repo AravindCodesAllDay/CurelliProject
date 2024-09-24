@@ -509,8 +509,8 @@ const PrivacyPolicy = () => {
         </p>
         <p>
           We will let You know via email and/or a prominent notice on Our
-          Service, prior to the change becoming effective and update the "Last
-          updated" date at the top of this Privacy Policy.
+          Service, prior to the change becoming effective and update the
+          &quot;Last updated&quot; date at the top of this Privacy Policy.
         </p>
         <p>
           You are advised to review this Privacy Policy periodically for any
