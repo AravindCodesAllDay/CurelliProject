@@ -1,9 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import img1 from "../_assets/Logo_02.png";
-import { toast } from "react-toastify";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { toast } from "react-toastify";
+
+import img1 from "../_assets/Logo_02.png";
 
 const ForgotPswd: React.FC = () => {
   const [mail, setMail] = useState<string>("");
@@ -12,7 +15,7 @@ const ForgotPswd: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [verified, setVerified] = useState<boolean>(false);
-  const nav = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +39,7 @@ const ForgotPswd: React.FC = () => {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ mail, otp }), // Adjust payload as needed
+              body: JSON.stringify({ mail, otp }),
             }
           );
 
@@ -47,7 +50,7 @@ const ForgotPswd: React.FC = () => {
 
           toast.success("Registration Successful");
           setTimeout(() => {
-            nav("/login");
+            router.push("/login"); // Fixed the navigation
           }, 5000);
         } else {
           setError(true);
@@ -104,10 +107,7 @@ const ForgotPswd: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center bg-gray-100 p-12">
-      <Link to="/">
-        <Image src={img1} alt="Company Logo" className="h-24 m-4" />
-      </Link>
+    <div className="flex flex-col justify-center items-center bg-gray-100 p-12">
       <div className="bg-white p-8 px-12 rounded-md shadow-lg w-[440px] flex flex-col items-center">
         <h2 className="text-[#277933] text-2xl mb-6 font-semibold">
           Forgot Password
@@ -143,16 +143,18 @@ const ForgotPswd: React.FC = () => {
             </>
           )}
           <p className="text-start">
-            <Link to="/policy" className="text-customGreen cursor-pointer">
+            <Link href="/policy" className="text-customGreen cursor-pointer">
               Curelli Privacy Policy
             </Link>
           </p>
           <button
             type="submit"
-            className="submit-button bg-green-700 text-white h-10 p-2 rounded"
+            className={`submit-button ${
+              loading ? "bg-gray-500" : "bg-green-700"
+            } text-white h-10 p-2 rounded`}
             disabled={loading}
           >
-            {showOtp ? "Submit" : "Next"}
+            {loading ? "Processing..." : showOtp ? "Submit" : "Next"}
           </button>
         </form>
       </div>
