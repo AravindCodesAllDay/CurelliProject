@@ -60,7 +60,7 @@ const Checkout: React.FC = () => {
     if (userId) {
       fetchCartAddressDetails();
     }
-  }, [userId]);
+  }, [userId, fetchCartAddressDetails]);
 
   useEffect(() => {
     if (!loading && cartItems.length === 0) {

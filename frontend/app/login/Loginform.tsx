@@ -102,7 +102,8 @@ export default function Loginform() {
           }
         });
     }
-  }, [user]);
+  }, [user, router]);
+
   return (
     <div className="h-100% flex justify-center items-center bg-gray-100 xs:p-3 sm:p-4 md:p-5 lg:p-12 xl:p-12 2xl:p-14">
       <div className="bg-white rounded-md shadow-lg w-[440px] xs:p-4 sm:p-8 md:p-10 lg:p-12 xl:p-12 2xl:p-14">

@@ -134,6 +134,7 @@ export default function Orders() {
                         <td className="py-2 ">
                           <img
                             src={product.productId.photos[0]}
+                            alt={product.productId.name}
                             className="h-14 mx-auto"
                           />
                         </td>

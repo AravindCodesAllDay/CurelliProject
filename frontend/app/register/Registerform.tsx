@@ -116,12 +116,13 @@ export default function Registerform() {
         .catch((err) => console.log(err))
         .finally(() => setLoading(false));
     }
+
     return () => {
       if (user) {
         googleLogout();
       }
     };
-  }, [user]);
+  }, [user, router]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -218,7 +219,7 @@ export default function Registerform() {
           </div>
           {wrongPswd && (
             <p className="flex text-sm text-red-800 underline -mt-3 items-center">
-              Password doesn't match
+              Password doesn&apos;t match
             </p>
           )}
 

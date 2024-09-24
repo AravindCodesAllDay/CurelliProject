@@ -42,7 +42,7 @@ const Wishlist = () => {
     if (userId) {
       fetchWishDetails();
     }
-  }, [userId]);
+  }, [userId, fetchWishDetails]);
 
   const handleDelete = async (productId: string) => {
     try {

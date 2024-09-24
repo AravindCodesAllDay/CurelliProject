@@ -11,17 +11,17 @@ export default function AboutBanner() {
       <div className="flex flex-col items-center justify-center md:space-x-8 max-w-screen-xl mx-auto">
         <div className="flex flex-col gap-6">
           <h2 className="font-semibold text-[#40773b] text-xl md:text-4xl tracking-wide leading-normal">
-            A Mother's Legacy: From Family Favourite to Empowering Mission
+            A Mother&apos;s Legacy: From Family Favourite to Empowering Mission
           </h2>
           <p className="font-normal text-[#40773b] text-base md:text-lg tracking-normal leading-normal text-justify">
             Deep in the heart of Kanyakumari, a coastal town at the southernmost
-            tip of India, a mother's love sparked a journey of tradition,
+            tip of India, a mother&apos;s love sparked a journey of tradition,
             empowerment, and wellbeing. In 1996, she crafted a unique vathal,
             bursting with flavor and health benefits, originally intended for
-            her family's table. The taste, however, transcended its intended
-            audience, captivating neighbours and relatives alike. This was the
-            seed of Curelli Foods, a company founded by her son, carrying his
-            mother's legacy forward.
+            her family&apos;s table. The taste, however, transcended its
+            intended audience, captivating neighbours and relatives alike. This
+            was the seed of Curelli Foods, a company founded by her son,
+            carrying his mother&apos;s legacy forward.
           </p>
           <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row items-center">
             <Image
@@ -35,12 +35,12 @@ export default function AboutBanner() {
                   Women empowerment
                 </h3>
                 <p>
-                  Curelli Foods is more than just a food products company; it's
-                  a celebration of women's power. From cultivating crops to
-                  processing and packaging, every step is guided by skilled
-                  female hands. This embodies the founder's mother's dream - to
-                  create a safe and supportive environment where women can
-                  thrive.
+                  Curelli Foods is more than just a food products company;
+                  it&apos;s a celebration of women&apos;s power. From
+                  cultivating crops to processing and packaging, every step is
+                  guided by skilled female hands. This embodies the
+                  founder&apos;s mother&apos;s dream - to create a safe and
+                  supportive environment where women can thrive.
                 </p>
               </div>
               <div className="font-normal text-[#40773b] text-base md:text-lg tracking-normal leading-normal text-justify p-4">
@@ -48,9 +48,9 @@ export default function AboutBanner() {
                   Reviving forgotten traditions
                 </h3>
                 <p>
-                  But the mission doesn't stop there. Curelli Foods fights to
-                  preserve ancient wisdom, recognizing the fading knowledge of
-                  traditional herbal remedies used by our ancestors. Many of
+                  But the mission doesn&apos;t stop there. Curelli Foods fights
+                  to preserve ancient wisdom, recognizing the fading knowledge
+                  of traditional herbal remedies used by our ancestors. Many of
                   these ingredients are endangered, forgotten by younger
                   generations and neglected by farmers. To combat this, Curelli
                   Foods partners with farmers, helping them cultivate and

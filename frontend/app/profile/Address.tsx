@@ -32,7 +32,7 @@ export default function Address() {
   };
   useEffect(() => {
     fetchDetails();
-  }, [userId]);
+  }, [userId, fetchDetails]);
 
   const deleteAddress = async (addressId: string) => {
     try {

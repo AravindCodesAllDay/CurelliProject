@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "../_components/Header";
@@ -55,7 +55,7 @@ const Cart: React.FC = () => {
     }
   };
 
-  const fetchCartDetails = async () => {
+  const fetchCartDetails = useCallback(async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
@@ -72,7 +72,13 @@ const Cart: React.FC = () => {
       setError("Error fetching cart. Please try again later.");
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchCartDetails();
+    }
+  }, [userId, fetchCartDetails]);
 
   const handleDelete = async (productId: string) => {
     try {
@@ -96,12 +102,6 @@ const Cart: React.FC = () => {
       toast.error("Error deleting item from cart. Please try again later.");
     }
   };
-
-  useEffect(() => {
-    if (userId) {
-      fetchCartDetails();
-    }
-  }, [userId]);
 
   if (loading) return <div className="text-center">Loading...</div>;
   if (error)

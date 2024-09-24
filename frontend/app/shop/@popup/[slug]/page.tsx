@@ -56,7 +56,7 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
     return () => {
       document.body.style.overflow = "auto";
     };
-  }, [slug]);
+  }, [slug, router]);
 
   const handleAddToCartOrWishlist = async (path: string, productId: string) => {
     if (!userId) {
@@ -139,8 +139,6 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
                   src={details.photos[0]}
                   alt="Product"
                   className="max-w-full h-auto"
-                  width={500}
-                  height={500}
                 />
               )}
             </div>

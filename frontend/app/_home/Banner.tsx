@@ -21,12 +21,12 @@ export default function Banner() {
           Only the Best
         </div>
         <p className="text-[#40773b] xs:text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl text-justify">
-          The term "Organic" often carries a hefty price tag elsewhere. At our
-          home, we offer an exception. Despite our commitment to authenticity
-          and quality, our products are remarkably affordable. How? We grow our
-          original organic ingredients in our very own farms. This direct
-          connection from farm to table ensures not only unmatched quality but
-          also keeps the prices within reach.
+          The term &quot;Organic&quot; often carries a hefty price tag
+          elsewhere. At our home, we offer an exception. Despite our commitment
+          to authenticity and quality, our products are remarkably affordable.
+          How? We grow our original organic ingredients in our very own farms.
+          This direct connection from farm to table ensures not only unmatched
+          quality but also keeps the prices within reach.
         </p>
       </div>
     </div>

@@ -54,16 +54,17 @@ const PrivacyPolicy = () => {
           </p>
           <p className="mb-4">
             <b>Affiliate</b> means an entity that controls, is controlled by or
-            is under common control with a party, where "control" means
-            ownership of 50% or more of the shares, equity interest or other
-            securities entitled to vote for election of directors or other
+            is under common control with a party, where &quot;control&quot;
+            means ownership of 50% or more of the shares, equity interest or
+            other securities entitled to vote for election of directors or other
             managing authority.
           </p>
           <p className="mb-4">
-            <b>Company</b> (referred to as either "the Company", "We", "Us" or
-            "Our" in this Agreement) refers to Curelli Foods Private Limited,
-            No.705/3B of Chenbagaramanputhoor Road, Sahayanagar, Thovalai
-            Village, Shanmugapuram, Kanyakumari district, Tamil Nadu - 629302.
+            <b>Company</b> (referred to as either &quot;the Company&quot;,
+            &quot;We&quot;, &quot;Us&quot; or &quot;Our&quot; in this Agreement)
+            refers to Curelli Foods Private Limited, No.705/3B of
+            Chenbagaramanputhoor Road, Sahayanagar, Thovalai Village,
+            Shanmugapuram, Kanyakumari district, Tamil Nadu - 629302.
           </p>
           <p className="mb-4">
             <b>Cookies</b> are small files that are placed on Your computer,
@@ -134,7 +135,7 @@ const PrivacyPolicy = () => {
         <h3 className="text-xl font-bold mt-4">Usage Data</h3>
         <p>Usage Data is collected automatically when using the Service. </p>
         <p>
-          Usage Data may include information such as Your Device's Internet
+          Usage Data may include information such as Your Device&apos;s Internet
           Protocol address (e.g. IP address), browser type, browser version, the
           pages of our Service that You visit, the time and date of Your visit,
           the time spent on those pages, unique device identifiers and other
@@ -156,7 +157,7 @@ const PrivacyPolicy = () => {
         <h3 className="text-xl font-semibold mt-4 ">
           Information from Third-Party Social Media Services
         </h3>
-        <div className="">
+        <div>
           <p>
             The Company allows You to create an account and log in to use the
             Service through the following Third-party Social Media Services:
@@ -171,24 +172,24 @@ const PrivacyPolicy = () => {
           <p>
             If You decide to register through or otherwise grant us access to a
             Third-Party Social Media Service, We may collect Personal data that
-            is already associated with Your Third-Party Social Media Service's
-            account, such as Your name, Your email address, Your activities or
-            Your contact list associated with that account.
+            is already associated with Your Third-Party Social Media
+            Service&apos;s account, such as Your name, Your email address, Your
+            activities or Your contact list associated with that account.
           </p>
           <p>
             You may also have the option of sharing additional information with
-            the Company through Your Third-Party Social Media Service's account.
-            If You choose to provide such information and Personal Data, during
-            registration or otherwise, You are giving the Company permission to
-            use, share, and store it in a manner consistent with this Privacy
-            Policy.
+            the Company through Your Third-Party Social Media Service&apos;s
+            account. If You choose to provide such information and Personal
+            Data, during registration or otherwise, You are giving the Company
+            permission to use, share, and store it in a manner consistent with
+            this Privacy Policy.
           </p>
         </div>
         <div className="mt-8 rounded-md">
           <h3 className="text-xl font-bold mt-2 italic">
             Tracking Technologies and Cookies
           </h3>
-          <div className="">
+          <div>
             <p>
               We use Cookies and similar tracking technologies to track the
               activity on Our Service and store certain information. Tracking
@@ -218,17 +219,17 @@ const PrivacyPolicy = () => {
               </li>
             </ul>
             <p>
-              Cookies can be "Persistent" or "Session" Cookies. Persistent
-              Cookies remain on Your personal computer or mobile device when You
-              go offline, while Session Cookies are deleted as soon as You close
-              Your web browser. You can learn more about cookies on TermsFeed
-              website article.
+              Cookies can be &quot;Persistent&quot; or &quot;Session&quot;
+              Cookies. Persistent Cookies remain on Your personal computer or
+              mobile device when You go offline, while Session Cookies are
+              deleted as soon as You close Your web browser. You can learn more
+              about cookies on TermsFeed website article.
             </p>
             <p>
               We use both Session and Persistent Cookies for the purposes set
               out below:
             </p>
-            <div className="">
+            <div>
               <h4 className="text-lg font-bold mt-4">
                 Necessary / Essential Cookies
               </h4>
@@ -271,7 +272,7 @@ const PrivacyPolicy = () => {
           </div>
         </div>
         <h3 className="text-xl font-bold mt-4">Use of Your Personal Data</h3>
-        <div className="">
+        <div>
           <p>The Company may use Personal Data for the following purposes:</p>
           <div>
             <p>
@@ -293,10 +294,11 @@ const PrivacyPolicy = () => {
             <p>
               <b>To contact You:</b> To contact You by email, telephone calls,
               SMS, or other equivalent forms of electronic communication, such
-              as a mobile application's push notifications regarding updates or
-              informative communications related to the functionalities,
-              products or contracted services, including the security updates,
-              when necessary or reasonable for their implementation.
+              as a mobile application&apos;s push notifications regarding
+              updates or informative communications related to the
+              functionalities, products or contracted services, including the
+              security updates, when necessary or reasonable for their
+              implementation.
             </p>
             <p>
               <b>
@@ -396,12 +398,12 @@ const PrivacyPolicy = () => {
         </h3>
         <p>
           Your information, including Personal Data, is processed at the
-          Company's operating offices and in any other places where the parties
-          involved in the processing are located. It means that this information
-          may be transferred to — and maintained on — computers located outside
-          of Your state, province, country or other governmental jurisdiction
-          where the data protection laws may differ than those from Your
-          jurisdiction.
+          Company&apos;s operating offices and in any other places where the
+          parties involved in the processing are located. It means that this
+          information may be transferred to — and maintained on — computers
+          located outside of Your state, province, country or other governmental
+          jurisdiction where the data protection laws may differ than those from
+          Your jurisdiction.
         </p>
         <p>
           Your consent to this Privacy Policy followed by Your submission of
@@ -437,7 +439,7 @@ const PrivacyPolicy = () => {
         <h3 className="text-xl font-bold mt-4">
           Disclosure of Your Personal Data
         </h3>
-        <div className="">
+        <div>
           <h4 className="italic font-bold">Business Transactions</h4>
           <p>
             If the Company is involved in a merger, acquisition, or asset sale,
@@ -471,7 +473,7 @@ const PrivacyPolicy = () => {
           </ul>
         </div>
         <h4>Security of Your Personal Data </h4>
-        <h3 className="text-xl font-bold mt-4">Children's Privacy </h3>
+        <h3 className="text-xl font-bold mt-4">Children&apos;s Privacy </h3>
         <p>
           Our Service does not address anyone under the age of 13. We do not
           knowingly collect personally identifiable information from anyone
@@ -484,15 +486,15 @@ const PrivacyPolicy = () => {
         <p>
           If We need to rely on consent as a legal basis for processing Your
           information and Your country requires consent from a parent, We may
-          require Your parent's consent before We collect and use that
+          require Your parent&apos;s consent before We collect and use that
           information.
         </p>
         <h3 className="text-xl font-bold mt-4">Links to Other Websites </h3>
         <p>
           Our Service may contain links to other websites that are not operated
           by Us. If You click on a third party link, You will be directed to
-          that third party's site. We strongly advise You to review the Privacy
-          Policy of every site You visit.
+          that third party&apos;s site. We strongly advise You to review the
+          Privacy Policy of every site You visit.
         </p>
         <p>
           We have no control over and assume no responsibility for the content,
