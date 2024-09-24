@@ -4,9 +4,13 @@ import { Bounce, toast } from "react-toastify";
 
 interface AddAddressModalProps {
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
+  refreshDetails: any;
 }
 
-export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
+export default function AddAddressModal({
+  setAddModal,
+  refreshDetails,
+}: AddAddressModalProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
@@ -76,6 +80,7 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
 
       const data = await addressRes.json();
       setAddModal(false);
+      refreshDetails();
       toast.success(data.message, {
         position: "bottom-center",
         autoClose: 3000,

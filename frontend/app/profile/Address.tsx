@@ -12,26 +12,25 @@ export default function Address() {
   const [addModal, setAddModal] = useState<boolean>(false);
   const [showModalComplete, setShowModalComplete] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      if (!userId) return;
+  const fetchDetails = async () => {
+    if (!userId) return;
 
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
-        );
-        if (res.ok) {
-          const data: any = await res.json();
-          setAddressDetails(data.address || []);
-        } else {
-          throw new Error("Failed to fetch user details");
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-        toast.error("Failed to fetch user details");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
+      );
+      if (res.ok) {
+        const data: any = await res.json();
+        setAddressDetails(data.address || []);
+      } else {
+        throw new Error("Failed to fetch user details");
       }
-    };
-
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      toast.error("Failed to fetch user details");
+    }
+  };
+  useEffect(() => {
     fetchDetails();
   }, [userId]);
 
@@ -133,7 +132,12 @@ export default function Address() {
               Add
             </button>
           </div>
-          {addModal && <AddAddressModal setAddModal={setAddModal} />}
+          {addModal && (
+            <AddAddressModal
+              setAddModal={setAddModal}
+              refreshDetails={fetchDetails}
+            />
+          )}
           <div className="px-4 py-2">
             {addressDetails.map((details) => (
               <div

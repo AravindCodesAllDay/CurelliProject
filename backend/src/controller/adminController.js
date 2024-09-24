@@ -1,5 +1,4 @@
 const bcrypt = require("bcrypt");
-
 const Admin = require("../models/adminModel");
 
 async function getAdmins(req, res) {
@@ -17,6 +16,7 @@ async function addAdmin(req, res) {
   try {
     const { mail } = req.body;
     const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!mail || !mailRegex.test(mail)) {
       return res.status(400).json({
         message: "All required fields must be provided and in valid format.",
@@ -28,7 +28,7 @@ async function addAdmin(req, res) {
       return res.status(409).json({ message: "Admin already exists" });
     }
 
-    const admin = await Admin.create({ mail });
+    const admin = await Admin.create({ mail, status: "subadmin" });
     return res.status(201).json(admin);
   } catch (error) {
     console.error(error.message);
@@ -36,16 +36,14 @@ async function addAdmin(req, res) {
   }
 }
 
-// Admin login with email and password
+// Admin login
 async function adminLogin(req, res) {
   try {
     const { mail, pswd } = req.body;
     const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!mail || !mailRegex.test(mail) || !pswd) {
-      return res
-        .status(400)
-        .json({ message: "mailId required or invalid mail format" });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const admin = await Admin.findOne({ mail });
@@ -58,7 +56,7 @@ async function adminLogin(req, res) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    return res.status(200).json({ message: "Login Successful" });
+    return res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -72,9 +70,7 @@ async function resetPswdAdmin(req, res) {
     const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!mail || !mailRegex.test(mail)) {
-      return res
-        .status(400)
-        .json({ message: "mailId required or invalid mail format" });
+      return res.status(400).json({ message: "Invalid email format" });
     }
 
     const admin = await Admin.findOne({ mail });
@@ -84,7 +80,7 @@ async function resetPswdAdmin(req, res) {
 
     const isMatch = await bcrypt.compare(pswd, admin.pswd);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ message: "Invalid current password" });
     }
 
     if (!newpswd || newpswd.trim() === "") {

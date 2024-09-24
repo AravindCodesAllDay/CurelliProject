@@ -36,7 +36,7 @@ const Checkout: React.FC = () => {
   const [paymentmethod, setPaymentmethod] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const fetchCartDetails = async () => {
+  const fetchCartAddressDetails = async () => {
     try {
       const data = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`
@@ -58,7 +58,7 @@ const Checkout: React.FC = () => {
 
   useEffect(() => {
     if (userId) {
-      fetchCartDetails();
+      fetchCartAddressDetails();
     }
   }, [userId]);
 
@@ -129,21 +129,15 @@ const Checkout: React.FC = () => {
                   <div className="flex flex-col gap-3 bg-white rounded-lg p-4">
                     {userAddress.map((data) => (
                       <div
-                        className="flex items-center rounded border-2 p-1 gap-2 text-sm md:text-base"
+                        className={`flex items-center rounded border-2 p-1 gap-2 text-sm md:text-base cursor-pointer ${
+                          addressId === data._id
+                            ? "border-green-600 bg-green-50"
+                            : ""
+                        }`}
                         key={data._id}
+                        onClick={() => setAddressId(data._id)}
                       >
-                        <input
-                          type="radio"
-                          id={data._id}
-                          name="address"
-                          value={data._id}
-                          className="mr-2"
-                          onChange={(e) => setAddressId(e.target.value)}
-                        />
-                        <label
-                          htmlFor={data._id}
-                          className="flex flex-col cursor-pointer"
-                        >
+                        <span className="flex flex-col cursor-pointer">
                           <p>
                             {data.address}, {data.district},
                           </p>
@@ -151,7 +145,7 @@ const Checkout: React.FC = () => {
                             {data.state}-{data.pincode}
                           </p>
                           <p>call-{data.addressContact}</p>
-                        </label>
+                        </span>
                       </div>
                     ))}
 
@@ -178,6 +172,23 @@ const Checkout: React.FC = () => {
                   </div>
                 </>
               )}
+              {getAddress && (
+                <div className="bg-white rounded-lg p-3 flex items-center">
+                  <p>
+                    Selected Address:{" "}
+                    {
+                      userAddress.find((addr) => addr._id === addressId)
+                        ?.address
+                    }
+                  </p>
+                  <button
+                    className="text-green-800 py-1 ml-auto border"
+                    onClick={() => setGetAddress(false)}
+                  >
+                    Edit Address
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col bg-[#638759] rounded-lg shadow-lg p-4 w-full gap-3">
@@ -187,34 +198,35 @@ const Checkout: React.FC = () => {
               {getAddress && !showPaymentMethod && (
                 <>
                   <div className="bg-white rounded-lg p-4 flex flex-col gap-3">
-                    <div>
-                      <div>
-                        <input
-                          type="radio"
-                          value="cash"
-                          onChange={(e) => setPaymentmethod(e.target.value)}
-                          name="payment-method"
-                        />
-                        <span>Cash On Delivery</span>
-                      </div>
-                      <div>
-                        <input
-                          type="radio"
-                          value="upi"
-                          onChange={(e) => setPaymentmethod(e.target.value)}
-                          name="payment-method"
-                        />
-                        <span>UPI</span>
-                      </div>
-                      <div>
-                        <input
-                          type="radio"
-                          value="emi"
-                          onChange={(e) => setPaymentmethod(e.target.value)}
-                          name="payment-method"
-                        />
-                        <span>EMI</span>
-                      </div>
+                    <div
+                      className={`cursor-pointer rounded border-2 p-1 ${
+                        paymentmethod == "cash"
+                          ? "border-green-600 bg-green-50"
+                          : ""
+                      }`}
+                      onClick={() => setPaymentmethod("cash")}
+                    >
+                      <span>Cash On Delivery</span>
+                    </div>
+                    <div
+                      className={`cursor-pointer rounded border-2 p-1 ${
+                        paymentmethod == "upi"
+                          ? "border-green-600 bg-green-50"
+                          : ""
+                      }`}
+                      onClick={() => setPaymentmethod("upi")}
+                    >
+                      <span>UPI</span>
+                    </div>
+                    <div
+                      className={`cursor-pointer rounded border-2 p-1 ${
+                        paymentmethod == "emi"
+                          ? "border-green-600 bg-green-50"
+                          : ""
+                      }`}
+                      onClick={() => setPaymentmethod("emi")}
+                    >
+                      <span>EMI</span>
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -232,6 +244,17 @@ const Checkout: React.FC = () => {
                     </button>
                   </div>
                 </>
+              )}
+              {showPaymentMethod && (
+                <div className="bg-white rounded-lg p-3 flex items-center">
+                  <p>Selected Payment Method: {paymentmethod}</p>
+                  <button
+                    className="text-green-800 py-1 ml-auto"
+                    onClick={() => setShowPaymentMethod(false)}
+                  >
+                    Edit Payment Method
+                  </button>
+                </div>
               )}
             </div>
 
@@ -310,7 +333,12 @@ const Checkout: React.FC = () => {
           </div>
         </div>
       </div>
-      {addModal && <AddAddressModal setAddModal={setAddModal} />}
+      {addModal && (
+        <AddAddressModal
+          setAddModal={setAddModal}
+          refreshDetails={fetchCartAddressDetails}
+        />
+      )}
     </>
   );
 };

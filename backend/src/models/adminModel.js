@@ -14,9 +14,14 @@ const adminSchema = new Schema({
     type: String,
     default: "team@2024",
   },
+  status: {
+    type: String,
+    enum: ["admin", "subadmin"],
+    required: true,
+  },
 });
 
-// Pre-save hook to hash the password
+// Middleware to hash password before saving
 adminSchema.pre("save", async function (next) {
   const admin = this;
 

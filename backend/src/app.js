@@ -8,8 +8,6 @@ const productRoutes = require("./routes/productRoutes");
 const bestsellerRoutes = require("./routes/bestsellerRoutes");
 const carouselRoutes = require("./routes/carouselRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const subadminRoutes = require("./routes/subadminRoutes");
-const tokenRoutes = require("./routes/tokenRoutes");
 const mailRoutes = require("./routes/mailRoutes");
 
 const app = express();
@@ -52,8 +50,6 @@ app.use("/products", productRoutes);
 app.use("/bestseller", bestsellerRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/admin", adminRoutes);
-app.use("/subadmin", subadminRoutes);
-app.use("/token", tokenRoutes);
 app.use("/mail", mailRoutes);
 
 const start = async () => {
