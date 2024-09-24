@@ -3,16 +3,12 @@ import React, { useState, useEffect } from "react";
 import { TECarousel, TECarouselItem } from "tw-elements-react";
 
 interface CarouselItem {
-  _id: string;
-  name: string;
-  photo: string;
-  index: number;
-  mobile: boolean;
+  lap: string[];
+  mobile: string[];
 }
 
 export default function Carousel() {
-  const [carouselLap, setCarouselLap] = useState<CarouselItem[]>([]);
-  const [carouselMobile, setCarouselMobile] = useState<CarouselItem[]>([]);
+  const [images, setImages] = useState<CarouselItem | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,14 +27,8 @@ export default function Carousel() {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const products: CarouselItem[] = await response.json();
-
-        const lapItems = products.filter((item) => !item.mobile);
-        const mobileItems = products.filter((item) => item.mobile);
-        lapItems.sort((a, b) => a.index - b.index);
-        mobileItems.sort((a, b) => a.index - b.index);
-        setCarouselLap(lapItems);
-        setCarouselMobile(mobileItems);
+        const data = await response.json();
+        setImages(data);
       } catch (error) {
         console.error("Fetch error:", error);
       }
@@ -47,18 +37,18 @@ export default function Carousel() {
     fetchData();
   }, []);
 
-  const renderCarouselItems = (items: CarouselItem[]) =>
+  const renderCarouselItems = (items: string[]) =>
     items.length > 0 ? (
       items.map((item, index) => (
         <TECarouselItem
-          key={item._id}
+          key={index}
           itemID={index + 1}
           className="relative float-left -mr-[100%] hidden w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none"
         >
           <img
-            src={`${process.env.NEXT_PUBLIC_API_URL}/carouselImg/${item.photo}`}
+            src={item}
             className="block w-full"
-            alt={item.name || "Carousel Image"}
+            alt={`Carousel Image ${index}`}
           />
         </TECarouselItem>
       ))
@@ -66,7 +56,7 @@ export default function Carousel() {
       <p className="text-center text-green-700">Loading Images</p>
     );
 
-  const CarouselComponent = ({ items }: { items: CarouselItem[] }) => (
+  const CarouselComponent = ({ items }: { items: string[] }) => (
     <TECarousel showControls showIndicators ride="carousel">
       <div className="relative w-full overflow-hidden after:clear-both after:block after:content-['']">
         {renderCarouselItems(items)}
@@ -77,10 +67,10 @@ export default function Carousel() {
   return (
     <>
       <div className="hidden md:block w-full">
-        <CarouselComponent items={carouselLap} />
+        {images && <CarouselComponent items={images.lap} />}
       </div>
       <div className="md:hidden w-full">
-        <CarouselComponent items={carouselMobile} />
+        {images && <CarouselComponent items={images.mobile} />}
       </div>
     </>
   );

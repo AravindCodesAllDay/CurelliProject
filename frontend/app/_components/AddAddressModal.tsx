@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Bounce, ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Bounce, toast } from "react-toastify";
 
 interface AddAddressModalProps {
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,6 +14,7 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
   const [state, setState] = useState<string>("");
   const [pincode, setPinCode] = useState<string | number>("");
   const [addressContact, setAddressContact] = useState<string | number>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const id = localStorage.getItem("id");
@@ -23,6 +23,16 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
 
   const addAddress = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    console.log(
+      userId,
+      name,
+      address,
+      district,
+      state,
+      pincode,
+      addressContact
+    );
     if (!userId) {
       toast.error("User ID is missing");
       return;
@@ -42,13 +52,14 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
 
     try {
       const addressRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/address`,
         {
           method: "POST",
           headers: {
             "Content-type": "application/json",
           },
           body: JSON.stringify({
+            userId,
             name,
             address,
             district,
@@ -58,36 +69,36 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
           }),
         }
       );
-
-      if (addressRes.ok) {
-        const data = await addressRes.json();
-        setAddModal(false);
-        toast.success(data.message, {
-          position: "bottom-center",
-          autoClose: 3000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          transition: Bounce,
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-      } else {
-        toast.error("Failed to add address");
+      if (!addressRes.ok) {
+        const errorData = await addressRes.json();
+        throw new Error(errorData.message || "Failed to add address");
       }
+
+      const data = await addressRes.json();
+      setAddModal(false);
+      toast.success(data.message, {
+        position: "bottom-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     } catch (error: any) {
       console.error("Error during adding address", error.message);
       toast.error("An error occurred while adding the address");
     }
+    setIsSubmitting(false);
   };
 
   return (
     <>
-      <ToastContainer />
       <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
         <div className="bg-white p-4 m-2 rounded-lg shadow-lg w-full max-w-lg">
           <h3 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -152,9 +163,14 @@ export default function AddAddressModal({ setAddModal }: AddAddressModalProps) {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isSubmitting}
+                className={`px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  isSubmitting
+                    ? "bg-gray-500"
+                    : "bg-green-600 hover:bg-green-600"
+                }`}
               >
-                Add Address
+                {isSubmitting ? "Submitting..." : "Add Address"}
               </button>
             </div>
           </form>

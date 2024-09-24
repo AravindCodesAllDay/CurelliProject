@@ -1,16 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaShareAlt, FaTrash } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import Header from "../_components/Header";
 
+import { toast } from "react-toastify";
+import { FaShareAlt, FaTrash } from "react-icons/fa";
+
 interface CartItem {
-  _id: string;
+  productId: string;
   name: string;
-  photo: string;
+  photos: string[];
   price: number;
   quantity: number;
 }
@@ -25,40 +25,47 @@ const Cart: React.FC = () => {
 
   const handleQuantityChange = async (productId: string, sign: "+" | "-") => {
     try {
+      console.log(productId);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/cartquantity`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${sign}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             userId,
             productId,
-            sign,
           }),
         }
       );
 
-      if (!res.ok) throw new Error("Failed to update quantity");
+      if (res.status === 404) throw new Error("Product not found in the cart");
+      if (res.status === 400) throw new Error("Invalid request");
+      if (res.status !== 200) throw new Error("Failed to update quantity");
 
       await fetchCartDetails();
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Error updating quantity. Please try again later.");
+      toast.error(
+        `Error updating quantity: ${
+          error instanceof Error ? error.message : "An error occurred"
+        }`
+      );
     }
   };
 
   const fetchCartDetails = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
       );
 
       if (!response.ok) throw new Error("Failed to fetch cart details");
 
-      const user = await response.json();
-      setCartItems(user.cart);
+      const cart = await response.json();
+      console.log(cart);
+      setCartItems(cart);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching user cart:", error);
@@ -108,7 +115,6 @@ const Cart: React.FC = () => {
 
   return (
     <>
-      <ToastContainer />
       <Header title={"Cart"} />
       {cartItems.length > 0 ? (
         <div className="container mx-auto p-2">
@@ -124,10 +130,10 @@ const Cart: React.FC = () => {
             </thead>
             <tbody>
               {cartItems.map((item) => (
-                <tr key={item._id} className="border-b">
+                <tr key={item.productId} className="border-b">
                   <td className="flex justify-center p-2">
                     <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${item.photo}`}
+                      src={item.photos[0]}
                       alt={item.name}
                       className="w-24 h-24 object-contain"
                     />
@@ -137,14 +143,18 @@ const Cart: React.FC = () => {
                     <div className="flex justify-center items-center">
                       <button
                         className="size-6 rounded-full bg-gray-200 flex items-center justify-center mr-2 font-bold text-lg"
-                        onClick={() => handleQuantityChange(item._id, "-")}
+                        onClick={() =>
+                          handleQuantityChange(item.productId, "-")
+                        }
                       >
                         -
                       </button>
                       <span className="font-bold text-xl">{item.quantity}</span>
                       <button
                         className="size-6 rounded-full bg-gray-200 flex items-center justify-center ml-2 font-bold text-lg"
-                        onClick={() => handleQuantityChange(item._id, "+")}
+                        onClick={() =>
+                          handleQuantityChange(item.productId, "+")
+                        }
                       >
                         +
                       </button>
@@ -157,7 +167,7 @@ const Cart: React.FC = () => {
                     <div className="flex justify-center items-center space-x-4">
                       <FaTrash
                         className="w-5 h-5 text-red-800 cursor-pointer"
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => handleDelete(item.productId)}
                       />
                       <FaShareAlt className="w-5 h-5 text-black cursor-pointer" />
                     </div>

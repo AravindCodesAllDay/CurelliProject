@@ -1,9 +1,10 @@
 const Carousel = require("../models/carouselModel");
-const AWS = require("aws-sdk");
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const { S3Client } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+
+// Create S3 client using default credential provider chain
+const s3 = new S3Client({
   region: process.env.AWS_REGION,
 });
 
@@ -19,15 +20,25 @@ exports.addCarousel = async (req, res, next) => {
 
     if (req.files["images"]) {
       for (let file of req.files["images"]) {
-        const s3Upload = await s3
-          .upload({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: `carousel/${Date.now()}_${file.originalname}`,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          })
-          .promise();
-        images.push(s3Upload.Location);
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `carousel/${Date.now()}_${file.originalname}`,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        };
+
+        try {
+          const upload = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
+          const s3Upload = await upload.done();
+          images.push(s3Upload.Location);
+        } catch (uploadError) {
+          console.error("S3 upload error:", uploadError);
+          return res.status(500).send("Failed to upload image to S3.");
+        }
       }
     }
 
@@ -42,8 +53,8 @@ exports.addCarousel = async (req, res, next) => {
       .status(200)
       .send(`Images inserted successfully for ${type ? "mobile" : "desktop"}.`);
   } catch (error) {
-    res.status(500).send("Error processing request.");
     console.error("Error processing request:", error);
+    res.status(500).send("Error processing request.");
   }
 };
 
@@ -62,7 +73,7 @@ exports.getCarousel = async (req, res, next) => {
       mobile: mobileImages,
     });
   } catch (error) {
-    res.status(500).send("Error fetching carousel data.");
     console.error("Error fetching carousel data:", error);
+    res.status(500).send("Error fetching carousel data.");
   }
 };

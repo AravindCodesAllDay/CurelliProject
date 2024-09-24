@@ -8,6 +8,9 @@ const productSchema = new mongoose.Schema({
   rating: {
     type: Number,
   },
+  ratingcount: {
+    type: Number,
+  },
   photos: {
     type: [String],
   },
@@ -19,16 +22,10 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  categories: {
-    type: Array,
-  },
   status: {
     type: String,
     enum: ["inStock", "noStock", "suspended"],
     default: "inStock",
-  },
-  offerPrice: {
-    type: Number,
   },
 });
 

@@ -42,7 +42,7 @@ async function adminLogin(req, res) {
     const { mail, pswd } = req.body;
     const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!mail || !mailRegex.test(mail)) {
+    if (!mail || !mailRegex.test(mail) || !pswd) {
       return res
         .status(400)
         .json({ message: "mailId required or invalid mail format" });

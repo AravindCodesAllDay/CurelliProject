@@ -11,7 +11,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.get("/", getCarousel);
-
 router.post(
   "/",
   upload.fields([{ name: "images", maxCount: 10 }]),

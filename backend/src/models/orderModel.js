@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const addressModel = require("./addressModel");
 
 const orderSchema = new mongoose.Schema({
   userId: {
@@ -7,11 +8,16 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   address: {
-    type: Object,
+    type: [addressModel.schema],
     required: true,
   },
   products: {
-    type: Array,
+    type: [
+      {
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        quantity: { type: Number, required: true },
+      },
+    ],
     required: true,
   },
   date: {
@@ -22,16 +28,13 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  paymentDone: {
-    type: String,
-    default: false,
-  },
   totalPrice: {
     type: Number,
     required: true,
   },
   orderStatus: {
     type: String,
+    enum: ["pending", "delivered", "cancelled"],
     default: "pending",
   },
 });

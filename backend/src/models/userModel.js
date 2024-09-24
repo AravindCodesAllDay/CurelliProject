@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const cartModel = require("./cartModel");
+const addressModel = require("./addressModel");
+
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -29,16 +32,20 @@ const userSchema = new Schema({
     type: String,
   },
   cart: {
-    type: Array,
+    type: [cartModel.schema],
+    default: [],
   },
   wishlist: {
-    type: Array,
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+    default: [],
   },
   address: {
-    type: Array,
+    type: [addressModel.schema],
+    default: [],
   },
   orders: {
-    type: Array,
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],
+    default: [],
   },
 });
 

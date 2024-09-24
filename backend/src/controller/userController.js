@@ -1,5 +1,33 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 exports.googleLogin = async (req, res) => {
   try {
@@ -9,14 +37,14 @@ exports.googleLogin = async (req, res) => {
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
-    const user = await User.findOne({ mail: mail });
+    let user = await User.findOne({ mail });
     if (user) {
-      return res.status(201).json(user);
+      return res.status(200).json(user);
     }
-    const newUser = { name, mail };
-    const newuser = await User.create(newUser);
-    return res.status(201).json(newuser);
+    user = await User.create({ name, mail });
+    return res.status(201).json(user);
   } catch (error) {
+    console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -29,19 +57,17 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
-    const user = await User.findOne({ mail: mail });
+    const user = await User.findOne({ mail });
     if (!user) {
-      throw new Error("User not found");
+      return res.status(404).json({ message: "User not found" });
     }
-    const tablePassword = user.pswd;
-
-    const passwordsMatch = await bcrypt.compare(pswd, tablePassword);
-
+    const passwordsMatch = await bcrypt.compare(pswd, user.pswd);
     if (!passwordsMatch) {
-      return res.status(400).json({ message: "password doesn't match" });
+      return res.status(400).json({ message: "Password doesn't match" });
     }
-    return res.status(201).json(user);
+    return res.status(200).json(user); // 200 for successful login
   } catch (error) {
+    console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -63,41 +89,19 @@ exports.register = async (req, res) => {
     const user = await User.create(newUser);
     return res.status(201).json(user);
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-exports.getUser = async (req, res) => {
-  try {
-    const { identifier } = req.params;
-    let user = mongoose.Types.ObjectId.isValid(identifier)
-      ? await User.findOne({ _id: identifier })
-      : await User.findOne({ mail: identifier });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    return res.status(200).json(user);
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-exports.getUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
-
-    return res.status(200).json(users);
-  } catch (error) {
     console.error(error.message);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 exports.changePswd = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const newPswd = req.body.newPswd;
-
+    const { newPswd, userId } = req.body;
+    if (!newPswd || !userId) {
+      return res
+        .status(400)
+        .json({ message: "All required fields must be provided." });
+    }
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -105,10 +109,9 @@ exports.changePswd = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPswd, 10);
     user.pswd = hashedPassword;
     await user.save();
-
-    res.status(200).json({ message: "Password updated successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };

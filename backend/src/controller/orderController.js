@@ -1,11 +1,47 @@
 const Orders = require("../models/orderModel");
 const User = require("../models/userModel");
 
+async function getUserOrders(req, res, next) {
+  try {
+    const { userId } = req.params;
+
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const orders = await Orders.find({ userId }).populate({
+      path: "products.productId",
+      model: "Product",
+    });
+
+    const groupedOrders = {
+      pending: orders.filter((order) => order.orderStatus === "pending"),
+      delivered: orders.filter((order) => order.orderStatus === "delivered"),
+      cancelled: orders.filter((order) => order.orderStatus === "cancelled"),
+    };
+
+    return res.status(200).json(groupedOrders);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 async function getOrders(req, res, next) {
   try {
-    const orders = await Orders.find({});
+    const orders = await Orders.find({}).populate({
+      path: "products.productId",
+      model: "Product",
+    });
 
-    return res.status(200).json(orders);
+    const groupedOrders = {
+      pending: orders.filter((order) => order.orderStatus === "pending"),
+      delivered: orders.filter((order) => order.orderStatus === "delivered"),
+      cancelled: orders.filter((order) => order.orderStatus === "cancelled"),
+    };
+
+    return res.status(200).json(groupedOrders);
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: error.message });
@@ -14,34 +50,42 @@ async function getOrders(req, res, next) {
 
 async function addOrder(req, res, next) {
   try {
-    const { identifier } = req.params;
-    const { addressId, products, paymentmethod, totalPrice } = req.body;
+    const { addressId, paymentmethod, totalPrice, userId } = req.body;
     const d = new Date();
 
-    let user = await User.findById(identifier);
+    let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.cart = [];
+    const address = user.address.find(
+      (item) => item._id.toString() === addressId
+    );
+    if (!address) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    const products = user.cart;
+    if (!products.length) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
 
     const newOrder = new Orders({
-      userId: identifier,
-      address: addressId,
-      products: products,
+      userId,
+      address,
+      products,
       date: d.toDateString(),
-      paymentmethod: paymentmethod,
-      paymentDone: "pending",
-      delivered: false,
-      totalPrice: totalPrice,
+      paymentmethod,
+      totalPrice,
     });
 
-    user.orders.push(newOrder);
+    user.cart = [];
+    user.orders.push(newOrder._id);
 
     await newOrder.save();
     await user.save();
 
-    return res.status(200).json(newOrder);
+    return res.status(200).json({ message: "Order placed successfully" });
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -50,11 +94,10 @@ async function addOrder(req, res, next) {
 
 async function deleteOrder(req, res, next) {
   try {
-    const { identifier } = req.params;
-    const { OrderId } = req.body;
+    const { OrderId: orderId, userId } = req.body;
 
-    const user = await User.findById(identifier);
-    const order = await Orders.findById(OrderId);
+    const user = await User.findById(userId);
+    const order = await Orders.findById(orderId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -78,6 +121,7 @@ async function deleteOrder(req, res, next) {
 }
 
 module.exports = {
+  getUserOrders,
   getOrders,
   addOrder,
   deleteOrder,

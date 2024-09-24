@@ -3,14 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import AddAddressModal from "../_components/AddAddressModal";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import Header from "../_components/Header";
 
 interface CartItem {
-  _id: string;
+  productId: string;
   name: string;
-  photo: string;
+  photos: string[];
   price: number;
   quantity: number;
 }
@@ -39,12 +38,17 @@ const Checkout: React.FC = () => {
 
   const fetchCartDetails = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
+      const data = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`
       );
-      const user = await response.json();
-      setUserAddress(user.address);
-      setCartItems(user.cart);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
+      );
+      const address = await data.json();
+      const cart = await response.json();
+
+      setUserAddress(address);
+      setCartItems(cart);
     } catch (error) {
       console.error("Error fetching user cart:", error);
     } finally {
@@ -76,24 +80,16 @@ const Checkout: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     try {
-      const addressIndex = userAddress.findIndex(
-        (address) => address._id === addressId
-      );
-      if (addressIndex === -1) {
-        throw new Error("Invalid address selected");
-      }
-      const address = userAddress[addressIndex];
-
       const orderRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/${userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            addressId: address,
-            products: cartItems,
+            userId,
+            addressId,
             paymentmethod,
             totalPrice:
               totalPrice + Math.round(totalPrice * 0.1) - totalItems * 5,
@@ -120,7 +116,6 @@ const Checkout: React.FC = () => {
   };
   return (
     <>
-      <ToastContainer />
       <Header title="Checkout" />
       <div className="flex flex-col justify-center items-center">
         <div className="w-full flex flex-col items-center md:items-start md:flex-row p-3">
@@ -259,12 +254,12 @@ const Checkout: React.FC = () => {
                       <tbody>
                         {cartItems.map((item) => (
                           <tr
-                            key={item._id}
+                            key={item.productId}
                             className="border-2 m-1 text-center"
                           >
                             <td className="flex justify-center">
                               <img
-                                src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${item.photo}`}
+                                src={item.photos[0]}
                                 alt={item.name}
                                 className="w-24 h-24 object-contain"
                               />

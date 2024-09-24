@@ -1,23 +1,23 @@
 const User = require("../models/userModel");
 const Address = require("../models/addressModel");
+const { mongoose } = require("mongoose");
 
 exports.userDetails = async (req, res) => {
   try {
-    const { identifier } = req.params;
-    let userId;
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
-      userId = await User.findOne({ _id: identifier });
-    } else {
-      userId = await User.findOne({ mail: identifier });
+    const { formData, userId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(userId) || !formData) {
+      return res.status(400).json({ message: "Invalid request" });
     }
-    const updatedUserData = req.body;
-
-    const user = await User.findByIdAndUpdate(userId, updatedUserData);
-
+    const updatedUser = await User.findByIdAndUpdate(userId, formData, {
+      new: true,
+    });
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.json({
       success: true,
       message: "User information updated successfully",
-      user,
+      updatedUser,
     });
   } catch (error) {
     console.error(error);
@@ -25,26 +25,58 @@ exports.userDetails = async (req, res) => {
   }
 };
 
+exports.getAddress = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).send("User Not Found");
+    }
+
+    return res.status(200).json(user.address);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 exports.addAddress = async (req, res) => {
   try {
-    const { identifier } = req.params;
+    const { userId, name, address, district, state, pincode, addressContact } =
+      req.body;
+    if (
+      !userId ||
+      !name ||
+      !address ||
+      !district ||
+      !state ||
+      !pincode ||
+      !addressContact
+    ) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
 
-    const user = await User.findById(identifier).populate("address");
+    const user = await User.findById(userId).populate("address");
 
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    const address = new Address({
-      name: req.body.name,
-      address: req.body.address,
-      district: req.body.district,
-      state: req.body.state,
-      pincode: req.body.pincode,
-      addressContact: req.body.addressContact,
+    const newaddress = new Address({
+      name,
+      address,
+      district,
+      state,
+      pincode,
+      addressContact,
     });
 
-    user.address.push(address);
+    user.address.push(newaddress);
     await user.save();
 
     return res.status(200).json({ message: "Address added successfully" });
@@ -56,9 +88,12 @@ exports.addAddress = async (req, res) => {
 
 exports.removeAddress = async (req, res) => {
   try {
-    const { identifier } = req.params;
-    const { addressId } = req.body;
-    const user = await User.findById(identifier).populate("address");
+    const { addressId, userId } = req.body;
+    if (!userId || !addressId) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
+    const user = await User.findById(userId).populate("address");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -72,34 +107,6 @@ exports.removeAddress = async (req, res) => {
       user.address.splice(addressIndex, 1);
       await user.save();
       return res.status(200).json({ message: "Address deleted successfully" });
-    } else {
-      return res.status(404).json({ message: "Address not found" });
-    }
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-exports.getAddress = async (req, res) => {
-  try {
-    const { identifier, addressId } = req.query;
-    console.log(identifier, addressId);
-
-    const user = await User.findById(identifier);
-
-    if (!user) {
-      return res.status(404).send("User Not Found");
-    }
-
-    const addressIndex = user.address.findIndex(
-      (item) => item._id.toString() === addressId
-    );
-
-    if (addressIndex !== -1) {
-      const userAddress = user.address[addressIndex];
-      console.log(userAddress);
-      return res.status(200).json(userAddress);
     } else {
       return res.status(404).json({ message: "Address not found" });
     }

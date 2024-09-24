@@ -4,9 +4,13 @@ import Header from "../_components/Header";
 
 export default function Orders() {
   const userId = localStorage.getItem("id");
-  const [ongoingOrders, setOngoingOrders] = useState([]);
-  const [completedOrders, setCompletedOrders] = useState([]);
+  const [Orders, setOrders] = useState({
+    pending: [],
+    completed: [],
+    cancelled: [],
+  });
   const [showCompletedOrders, setShowCompletedOrders] = useState(false);
+  const [showCancelledOrders, setShowCancelledOrders] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,25 +18,13 @@ export default function Orders() {
     const fetchDetails = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/${userId}`
         );
         if (!res.ok) {
           throw new Error("Failed to fetch data");
         }
         const data = await res.json();
-        setOngoingOrders(
-          data.orders
-            .filter((order: any) => order.orderStatus === "pending")
-            .reverse()
-        );
-        setCompletedOrders(
-          data.orders
-            .filter(
-              (order: any) =>
-                order.orderStatus === "delivered" || order.status === "canceled"
-            )
-            .reverse()
-        );
+        setOrders(data);
       } catch (error) {
         console.error("Error fetching user details:", error);
         setError(
@@ -58,36 +50,63 @@ export default function Orders() {
       </div>
     );
 
-  const ordersToShow = showCompletedOrders ? completedOrders : ongoingOrders;
+  let ordersToShow = Orders.pending;
+  if (showCompletedOrders) {
+    ordersToShow = Orders.completed;
+  } else if (showCancelledOrders) {
+    ordersToShow = Orders.cancelled;
+  }
 
   return (
     <>
       <Header title="Orders" />
       <div className="max-w-4xl mx-auto py-8 items-center">
-        <button
-          className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
-            !showCompletedOrders
-              ? "bg-[#40773b] text-white"
-              : "bg-white text-[#40773b]"
-          } `}
-          onClick={() => setShowCompletedOrders(false)}
-        >
-          <h2>Pending Orders</h2>
-        </button>
-        <button
-          className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
-            showCompletedOrders
-              ? "bg-[#40773b] text-white"
-              : "bg-white text-[#40773b]"
-          } `}
-          onClick={() => setShowCompletedOrders(true)}
-        >
-          <h2>Completed Orders</h2>
-        </button>
+        <div className="flex space-x-2 mb-4">
+          <button
+            className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
+              !showCompletedOrders && !showCancelledOrders
+                ? "bg-[#40773b] text-white"
+                : "bg-white text-[#40773b]"
+            } `}
+            onClick={() => {
+              setShowCompletedOrders(false);
+              setShowCancelledOrders(false);
+            }}
+          >
+            <h2>Pending Orders</h2>
+          </button>
+          <button
+            className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
+              showCompletedOrders
+                ? "bg-[#40773b] text-white"
+                : "bg-white text-[#40773b]"
+            } `}
+            onClick={() => {
+              setShowCompletedOrders(true);
+              setShowCancelledOrders(false);
+            }}
+          >
+            <h2>Completed Orders</h2>
+          </button>
+          <button
+            className={`border-2 rounded-lg px-3 py-1 hover:bg-[#40773b] hover:text-white ${
+              showCancelledOrders
+                ? "bg-[#40773b] text-white"
+                : "bg-white text-[#40773b]"
+            } `}
+            onClick={() => {
+              setShowCompletedOrders(false);
+              setShowCancelledOrders(true);
+            }}
+          >
+            <h2>Cancelled Orders</h2>
+          </button>
+        </div>
         <div className="space-y-8">
-          {ordersToShow.length === 0 ? (
+          {ordersToShow && ordersToShow.length === 0 ? (
             <div>No orders found.</div>
           ) : (
+            ordersToShow &&
             ordersToShow.map((order: any, index: number) => (
               <div key={index} className="bg-white rounded shadow-md">
                 <div className="flex w-full p-4 items-center bg-green-700 text-white">
@@ -114,11 +133,13 @@ export default function Orders() {
                       <tr key={index} className="border-b ">
                         <td className="py-2 ">
                           <img
-                            src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${product.photo}`}
+                            src={product.productId.photos[0]}
                             className="h-14 mx-auto"
                           />
                         </td>
-                        <td className="py-2 text-center">{product.name}</td>
+                        <td className="py-2 text-center">
+                          {product.productId.name}
+                        </td>
                         <td className="py-2 text-center">{product.quantity}</td>
                       </tr>
                     ))}

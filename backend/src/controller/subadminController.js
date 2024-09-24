@@ -1,5 +1,5 @@
-const bcrypt = require("bcrypt");
 const Subadmin = require("../models/subadminModel");
+const bcrypt = require("bcrypt");
 
 async function getSubadmins(req, res) {
   try {

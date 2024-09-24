@@ -35,16 +35,16 @@ export default function Address() {
     fetchDetails();
   }, [userId]);
 
-  const deleteAddress = async (id: string) => {
+  const deleteAddress = async (addressId: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/address`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ addressId: id }),
+          body: JSON.stringify({ addressId, userId }),
         }
       );
       if (res.ok) {
@@ -61,7 +61,7 @@ export default function Address() {
           transition: Bounce,
         });
         setAddressDetails(
-          addressDetails.filter((address) => address._id !== id)
+          addressDetails.filter((address) => address._id !== addressId)
         );
       } else {
         throw new Error("Failed to delete address");

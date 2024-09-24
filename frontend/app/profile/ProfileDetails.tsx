@@ -61,13 +61,13 @@ export default function ProfileDetails() {
     e.preventDefault();
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/edit/${userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ formData, userId }),
         }
       );
       if (res.ok) {

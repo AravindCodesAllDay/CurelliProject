@@ -1,17 +1,16 @@
 const Products = require("../models/productModel");
-const AWS = require("aws-sdk");
+const { S3Client } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const s3 = new S3Client({
   region: process.env.AWS_REGION,
 });
 
 exports.addProduct = async (req, res) => {
   try {
-    const { name, price, description, rating, numOfRating } = req.body;
+    const { name, price, description, rating, ratingcount } = req.body;
 
-    if (!name || !price || !description || !rating || !numOfRating) {
+    if (!name || !price || !description || !rating || !ratingcount) {
       return res.status(400).send("Missing required fields");
     }
 
@@ -19,15 +18,25 @@ exports.addProduct = async (req, res) => {
 
     if (req.files["images"]) {
       for (let file of req.files["images"]) {
-        const s3Upload = await s3
-          .upload({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: `products/${Date.now()}_${file.originalname}`,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          })
-          .promise();
-        images.push(s3Upload.Location);
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `products/${Date.now()}_${file.originalname}`,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        };
+
+        try {
+          const upload = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
+          const s3Upload = await upload.done();
+          images.push(s3Upload.Location);
+        } catch (uploadError) {
+          console.error("S3 upload error:", uploadError);
+          return res.status(500).json({ error: "Error uploading images" });
+        }
       }
     }
 
@@ -36,7 +45,7 @@ exports.addProduct = async (req, res) => {
       price,
       description,
       rating,
-      numOfRating,
+      ratingcount,
       photos: images,
     });
 
@@ -77,7 +86,6 @@ exports.getProduct = async (req, res) => {
 exports.editProduct = async (req, res) => {
   const { _id } = req.params;
   const { name, price, description, stock } = req.body;
-  console.log(req.body);
 
   try {
     if (!name || !price || !description || !stock) {
@@ -91,13 +99,15 @@ exports.editProduct = async (req, res) => {
     }
 
     const update = {
-      name: name,
-      price: price,
-      description: description,
-      stock: stock,
+      name,
+      price,
+      description,
+      stock,
     };
 
-    const updatedProduct = await Products.findByIdAndUpdate(_id, update);
+    const updatedProduct = await Products.findByIdAndUpdate(_id, update, {
+      new: true,
+    });
 
     return res.status(200).json({ message: "Product updated", updatedProduct });
   } catch (error) {
