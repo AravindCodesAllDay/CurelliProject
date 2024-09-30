@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 
 import { FaEye } from "react-icons/fa";
 
-import google from "../_assets/google.png";
+import google from "@/assets/google.png";
 export default function Registerform() {
   const router = useRouter();
 

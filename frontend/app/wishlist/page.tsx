@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FaShareAlt, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Rating from "@mui/material/Rating";
-import Header from "../_components/Header";
+import Header from "@/components/Header";
 
 interface WishlistItem {
   productId: string;

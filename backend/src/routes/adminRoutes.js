@@ -3,14 +3,20 @@ const {
   addAdmin,
   getAdmins,
   resetPswdAdmin,
-  adminLogin,
+  Login,
+  googleLogin,
+  verifyTokenAdmin,
+  verifyTokenSubadmin,
 } = require("../controller/adminController");
 
 const router = express.Router();
 
 router.get("/", getAdmins);
 router.post("/", addAdmin);
+router.post("/google", googleLogin);
+router.post("/login", Login);
+router.post("/admin", verifyTokenAdmin);
+router.post("/subadmin", verifyTokenSubadmin);
 router.put("/", resetPswdAdmin);
-router.post("/login", adminLogin);
 
 module.exports = router;

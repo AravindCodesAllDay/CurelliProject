@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Header from "../_components/Header";
+import Header from "@/components/Header";
 
 export default function Orders() {
   const [userId, setUserId] = useState<string | null>(null);

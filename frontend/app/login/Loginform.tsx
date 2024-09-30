@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { FaEye } from "react-icons/fa";
 
-import google from "../_assets/google.png";
+import google from "@/assets/google.png";
 
 export default function Loginform() {
   const router = useRouter();

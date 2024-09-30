@@ -7,20 +7,22 @@ import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import logo from "../_assets/logo.png";
-import google from "../_assets/google.png";
+import logo from "@/assets/logo.png";
+import google from "@/assets/google.png";
 
 const Login = () => {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [mail, setMail] = useState<string>("");
   const [pswd, setPswd] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}admin/logintoken`,
+        `${process.env.NEXT_PUBLIC_API}admin/Login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -28,32 +30,19 @@ const Login = () => {
         }
       );
 
-      if (response.ok) {
-        const { token } = await response.json();
-        localStorage.setItem("token", token);
-        router.push("/");
-      } else {
-        const subAdminResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API}admin/subadminlogin`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mail, pswd }),
-          }
-        );
-
-        if (subAdminResponse.ok) {
-          const { token } = await subAdminResponse.json();
-          localStorage.setItem("token", token);
-          router.push("/orders");
-        } else {
-          toast.error("Invalid email or password");
-        }
+      if (!response.ok) {
+        throw new Error("Login failed");
       }
+
+      const { token } = await response.json();
+
+      localStorage.setItem("token", token);
+      router.push("/orders");
     } catch (error) {
       console.error("Error during login:", (error as Error).message);
       toast.error("Error during login, try again later");
     }
+    setIsLoading(false);
   };
 
   const login = useGoogleLogin({
@@ -74,28 +63,14 @@ const Login = () => {
           }
         )
         .then(async (res) => {
-          const mail = res.data.email;
-
+          const { email } = res.data;
           try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API}admin/subadmins`,
-              { method: "GET", headers: { "Content-Type": "application/json" } }
-            );
-
-            if (!response.ok) {
-              throw new Error("Subadmin not found");
-            }
-
-            const subAdmins = await response.json();
-            if (!subAdmins.some((subAdmin: any) => subAdmin.mail === mail)) {
-              throw new Error("Unauthorized access");
-            }
-
             const loginRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API}admin/logintoken`,
+              `${process.env.NEXT_PUBLIC_API}admin/googleLogin`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mail: email }),
               }
             );
 
@@ -105,7 +80,7 @@ const Login = () => {
 
             const { token } = await loginRes.json();
             localStorage.setItem("token", token);
-            router.push("/");
+            router.push("/orders");
           } catch (error) {
             console.error("Error during login:", (error as Error).message);
             toast.error("Error during login, try again later");
@@ -148,8 +123,9 @@ const Login = () => {
               <button
                 type="submit"
                 className="submit-button bg-[#277933] text-white h-10 p-2 rounded"
+                disabled={isLoading}
               >
-                Submit
+                {isLoading ? "Loading..." : "Submit"}
               </button>
             </form>
             <hr className="my-3" />

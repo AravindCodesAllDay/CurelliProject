@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import { Bounce, toast } from "react-toastify";
-import success from "../_assets/checked.png";
-import AddAddressModal from "../_components/AddAddressModal";
+import success from "@/assets/checked.png";
+import AddAddressModal from "@/components/AddAddressModal";
 import Image from "next/image";
 
 export default function Address() {

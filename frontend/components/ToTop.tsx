@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowUp } from "react-icons/fa";
 import Image from "next/image";
-import img2 from "../_assets/WhatsApp.png";
+import img2 from "@/assets/WhatsApp.png";
 
 const ToTop: React.FC = () => {
   const [isVisible, setIsVisible] = useState<boolean>(false);

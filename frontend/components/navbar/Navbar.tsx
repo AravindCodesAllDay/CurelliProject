@@ -9,7 +9,7 @@ import Search from "./Search";
 import OffCanvasMenu from "./OffCanvasMenu";
 import { FaShoppingBag, FaUser, FaBars } from "react-icons/fa";
 
-import img1 from "../../_assets/Logo_02.png";
+import img1 from "@/assets/Logo_02.png";
 
 export default function Navbar() {
   const router = useRouter();

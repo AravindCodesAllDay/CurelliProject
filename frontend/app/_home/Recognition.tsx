@@ -1,6 +1,6 @@
 import React from "react";
-import img1 from "../_assets/startupindia.png";
-import img2 from "../_assets/Startuptn-logo.png";
+import img1 from "@/assets/startupindia.png";
+import img2 from "@/assets/Startuptn-logo.png";
 import Image from "next/image";
 
 export default function Recognition() {

@@ -2,7 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
-import ToTop from "../_components/ToTop";
+import ToTop from "@/components/ToTop";
 import "./terms.css";
 
 const PrivacyPolicy = () => {

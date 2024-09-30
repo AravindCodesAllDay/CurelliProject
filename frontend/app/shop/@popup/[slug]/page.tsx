@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Rating from "@mui/material/Rating";
 import { toast } from "react-toastify";
 
-import Modal from "../../../_components/Modal";
+import Modal from "@/components/Modal";
 
 interface ProductDetails {
   _id: string;

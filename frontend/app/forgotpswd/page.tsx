@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { toast } from "react-toastify";
 
-import img1 from "../_assets/Logo_02.png";
+import img1 from "@/assets/Logo_02.png";
 
 const ForgotPswd: React.FC = () => {
   const [mail, setMail] = useState<string>("");

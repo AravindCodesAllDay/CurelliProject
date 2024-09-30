@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Header from "../_components/Header";
-
+import Header from "@/components/Header";
 import { toast } from "react-toastify";
 import { FaShareAlt, FaTrash } from "react-icons/fa";
+import Link from "next/link";
 
 interface CartItem {
   productId: string;
@@ -22,26 +21,26 @@ const Cart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleQuantityChange = async (productId: string, sign: "+" | "-") => {
-    try {
-      console.log(productId);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${sign}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            productId,
-          }),
-        }
-      );
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-      if (res.status === 404) throw new Error("Product not found in the cart");
-      if (res.status === 400) throw new Error("Invalid request");
-      if (res.status !== 200) throw new Error("Failed to update quantity");
+  const handleQuantityChange = async (productId: string, sign: "+" | "-") => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/users/cart/${sign}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, productId }),
+      });
+
+      if (!res.ok) {
+        const errorMessage =
+          res.status === 404
+            ? "Product not found in the cart"
+            : res.status === 400
+            ? "Invalid request"
+            : "Failed to update quantity";
+        throw new Error(errorMessage);
+      }
 
       await fetchCartDetails();
     } catch (error) {
@@ -51,27 +50,25 @@ const Cart: React.FC = () => {
           error instanceof Error ? error.message : "An error occurred"
         }`
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCartDetails = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
-      );
-
+      const response = await fetch(`${API_URL}/users/cart/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch cart details");
-
       const cart = await response.json();
-      console.log(cart);
       setCartItems(cart);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching user cart:", error);
       setError("Error fetching cart. Please try again later.");
+    } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, API_URL]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -87,12 +84,11 @@ const Cart: React.FC = () => {
   }, [userId, fetchCartDetails]);
 
   const handleDelete = async (productId: string) => {
+    setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/cart`, {
+      const res = await fetch(`${API_URL}/users/cart`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, productId }),
       });
 
@@ -106,6 +102,8 @@ const Cart: React.FC = () => {
     } catch (error) {
       console.error("Error deleting item from cart:", error);
       toast.error("Error deleting item from cart. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,6 +150,7 @@ const Cart: React.FC = () => {
                         onClick={() =>
                           handleQuantityChange(item.productId, "-")
                         }
+                        aria-label={`Decrease quantity of ${item.name}`}
                       >
                         -
                       </button>
@@ -161,6 +160,7 @@ const Cart: React.FC = () => {
                         onClick={() =>
                           handleQuantityChange(item.productId, "+")
                         }
+                        aria-label={`Increase quantity of ${item.name}`}
                       >
                         +
                       </button>
@@ -174,6 +174,7 @@ const Cart: React.FC = () => {
                       <FaTrash
                         className="w-5 h-5 text-red-800 cursor-pointer"
                         onClick={() => handleDelete(item.productId)}
+                        aria-label={`Delete ${item.name} from cart`}
                       />
                       <FaShareAlt className="w-5 h-5 text-black cursor-pointer" />
                     </div>

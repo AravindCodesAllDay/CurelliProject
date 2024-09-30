@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import img1 from "../_assets/Web_Image_03.jpg";
+import img1 from "@/assets/Web_Image_03.jpg";
 import Link from "next/link";
 
 const Posters: React.FC = () => {

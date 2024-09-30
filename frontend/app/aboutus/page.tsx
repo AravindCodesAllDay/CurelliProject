@@ -2,8 +2,8 @@ import React from "react";
 import AboutBanner from "./AboutBanner";
 import AboutDetails from "./AboutDetails";
 import AboutContact from "./AboutContact";
-import Footer from "../_components/Footer";
-import ToTop from "../_components/ToTop";
+import Footer from "@/components/Footer";
+import ToTop from "@/components/ToTop";
 
 export default function AboutUs() {
   return (

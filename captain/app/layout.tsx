@@ -12,9 +12,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_API;
+
+  if (!clientId) {
+    console.error(
+      "Google API client ID is not defined in environment variables"
+    );
+    return <div>Error: Missing Google API client ID</div>;
+  }
+
   return (
     <html lang="en">
-      <GoogleOAuthProvider clientId="154374303742-6fvp12c1uut9b1l6qnlpr6esvt2d3eq9.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={clientId}>
         <body>{children}</body>
       </GoogleOAuthProvider>
     </html>

@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import AddAddressModal from "../_components/AddAddressModal";
+import AddAddressModal from "@/components/AddAddressModal";
 import { toast } from "react-toastify";
-import Header from "../_components/Header";
+import Header from "@/components/Header";
 
 interface CartItem {
   productId: string;

@@ -1,3 +1,4 @@
+import ToTop from "@/components/ToTop";
 import React from "react";
 
 export default function layout(props: {
@@ -8,6 +9,7 @@ export default function layout(props: {
     <>
       {props.popup}
       {props.shop}
+      <ToTop />
     </>
   );
 }
