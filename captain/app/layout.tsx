@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import "./globals.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { ToastContainer } from "react-toastify";
 
 export const metadata: Metadata = {
   title: "Curelli Admin",
@@ -24,7 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <GoogleOAuthProvider clientId={clientId}>
-        <body>{children}</body>
+        <body>
+          <ToastContainer />
+
+          {children}
+        </body>
       </GoogleOAuthProvider>
     </html>
   );

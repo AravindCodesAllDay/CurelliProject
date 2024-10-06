@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const Admin = require("../models/adminModel");
+const adminModel = require("../models/adminModel");
 
 exports.getAdmins = async (req, res) => {
   try {
@@ -103,6 +104,7 @@ exports.Login = async (req, res) => {
 
     return res.status(200).json({
       message: "Login Successful",
+      status: role,
       token,
     });
   } catch (error) {
@@ -121,8 +123,11 @@ exports.verifyTokenAdmin = async (req, res) => {
   try {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
     const { role, userId } = decodedToken;
-
-    if (["admin"].includes(role)) {
+    if (!role || !userId) {
+      return res.status(400).json({ message: "all values must be provided" });
+    }
+    const user = await adminModel.findById(userId);
+    if (["admin"].includes(role) && user) {
       console.log(
         `${role.charAt(0).toUpperCase() + role.slice(1)} is authorized`
       );
@@ -131,7 +136,6 @@ exports.verifyTokenAdmin = async (req, res) => {
         message: `${
           role.charAt(0).toUpperCase() + role.slice(1)
         } is authorized`,
-        userId,
       });
     } else {
       console.log("User is not authorized");
@@ -164,8 +168,11 @@ exports.verifyTokenSubadmin = async (req, res) => {
   try {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
     const { role, userId } = decodedToken;
-
-    if (["subadmin"].includes(role)) {
+    if (!role || !userId) {
+      return res.status(400).json({ message: "all values must be provided" });
+    }
+    const user = await adminModel.findById(userId);
+    if (["subadmin"].includes(role) && user) {
       console.log(
         `${role.charAt(0).toUpperCase() + role.slice(1)} is authorized`
       );
@@ -174,7 +181,6 @@ exports.verifyTokenSubadmin = async (req, res) => {
         message: `${
           role.charAt(0).toUpperCase() + role.slice(1)
         } is authorized`,
-        userId,
       });
     } else {
       console.log("User is not authorized");

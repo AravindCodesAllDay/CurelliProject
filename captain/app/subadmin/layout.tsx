@@ -1,4 +1,4 @@
-import NavbarAdmin from "@/components/NavbarAdmin";
+import NavbarSubadmin from "@/components/NavbarSubadmin";
 import React from "react";
 
 export default function layout({
@@ -8,7 +8,7 @@ export default function layout({
 }>) {
   return (
     <div>
-      <NavbarAdmin />
+      <NavbarSubadmin />
       {children}
     </div>
   );

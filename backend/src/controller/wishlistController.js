@@ -21,6 +21,7 @@ exports.getWishlist = async (req, res) => {
         productId: product._id,
         name: product.name,
         rating: product.rating,
+        ratingcount: product.ratingcount,
         photos: product.photos,
         description: product.description,
         price: product.price,

@@ -6,50 +6,9 @@ import Image from "next/image";
 
 import logo from "@/assets/logo.png";
 
-export default function Navbar() {
+export default function NavbarAdmin() {
   const router: any = useRouter();
   const pathname = router.pathname;
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    const verifyToken = async () => {
-      if (!token) {
-        console.error("Token not found");
-        router.push("/login");
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API}admin/token`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log("Response Status:", response.status);
-
-        if (!response.ok) {
-          throw new Error("Failed to verify token");
-        }
-
-        const result = await response.json();
-        if (!result.valid) {
-          throw new Error("Invalid token");
-        }
-      } catch (error) {
-        console.error("Error verifying token:", error);
-        router.push("/login");
-      }
-    };
-
-    verifyToken();
-  }, [router]);
 
   const signout = () => {
     localStorage.clear();

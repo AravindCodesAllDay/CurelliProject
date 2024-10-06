@@ -5,9 +5,9 @@ import Header from "@/components/Header";
 export default function Orders() {
   const [userId, setUserId] = useState<string | null>(null);
   const [orders, setOrders] = useState({
-    pending: [],
-    completed: [],
-    cancelled: [],
+    pending: [] as any[],
+    delivered: [] as any[],
+    cancelled: [] as any[],
   });
   const [showCompletedOrders, setShowCompletedOrders] = useState(false);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
@@ -15,7 +15,6 @@ export default function Orders() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if running on the client and retrieve user ID from localStorage
     if (typeof window !== "undefined") {
       const storedUserId = localStorage.getItem("id");
       setUserId(storedUserId);
@@ -23,7 +22,6 @@ export default function Orders() {
   }, []);
 
   useEffect(() => {
-    // Fetch orders only if userId is available
     const fetchDetails = async () => {
       if (!userId) return;
 
@@ -36,6 +34,7 @@ export default function Orders() {
           throw new Error("Failed to fetch data");
         }
         const data = await res.json();
+        console.log(data);
         setOrders(data);
         setError(null);
       } catch (error) {
@@ -51,15 +50,13 @@ export default function Orders() {
     fetchDetails();
   }, [userId]);
 
-  // Decide which orders to show based on the tab selected
   let ordersToShow = orders.pending;
   if (showCompletedOrders) {
-    ordersToShow = orders.completed;
+    ordersToShow = orders.delivered;
   } else if (showCancelledOrders) {
     ordersToShow = orders.cancelled;
   }
 
-  // Loading and error handling
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -123,7 +120,7 @@ export default function Orders() {
         </div>
 
         <div className="space-y-8">
-          {ordersToShow.length === 0 ? (
+          {Array.isArray(ordersToShow) && ordersToShow.length === 0 ? ( // Check if it's an array
             <div>No orders found.</div>
           ) : (
             ordersToShow.map((order: any, index: number) => (

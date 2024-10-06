@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FaShareAlt, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -20,7 +20,7 @@ const Wishlist = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
 
-  const fetchWishDetails = async () => {
+  const fetchWishDetails = useCallback(async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/wishlist/${userId}`
@@ -36,7 +36,7 @@ const Wishlist = () => {
       console.error("Error fetching user wishlist:", error);
       toast.error("Error fetching wishlist. Please try again later.");
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,6 +44,7 @@ const Wishlist = () => {
       setUserId(storedUserId);
     }
   }, []);
+
   useEffect(() => {
     if (userId) {
       fetchWishDetails();

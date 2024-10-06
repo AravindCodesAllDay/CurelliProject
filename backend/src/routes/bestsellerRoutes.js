@@ -7,6 +7,6 @@ const {
 const router = express.Router();
 
 router.get("/", getBestseller);
-router.post("/:productId", addBestseller);
+router.post("/", addBestseller);
 
 module.exports = router;
