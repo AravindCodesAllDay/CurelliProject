@@ -128,9 +128,6 @@ exports.verifyTokenAdmin = async (req, res) => {
     }
     const user = await adminModel.findById(userId);
     if (["admin"].includes(role) && user) {
-      console.log(
-        `${role.charAt(0).toUpperCase() + role.slice(1)} is authorized`
-      );
       return res.status(200).json({
         valid: true,
         message: `${
@@ -138,7 +135,6 @@ exports.verifyTokenAdmin = async (req, res) => {
         } is authorized`,
       });
     } else {
-      console.log("User is not authorized");
       return res
         .status(403)
         .json({ valid: false, message: "User is not authorized" });
@@ -173,9 +169,6 @@ exports.verifyTokenSubadmin = async (req, res) => {
     }
     const user = await adminModel.findById(userId);
     if (["subadmin"].includes(role) && user) {
-      console.log(
-        `${role.charAt(0).toUpperCase() + role.slice(1)} is authorized`
-      );
       return res.status(200).json({
         valid: true,
         message: `${
@@ -183,7 +176,6 @@ exports.verifyTokenSubadmin = async (req, res) => {
         } is authorized`,
       });
     } else {
-      console.log("User is not authorized");
       return res
         .status(403)
         .json({ valid: false, message: "User is not authorized" });

@@ -88,7 +88,6 @@ const PopularProducts: React.FC = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(data);
         setCardDetails(data);
       } catch (error) {
         console.error("Fetch error:", error);

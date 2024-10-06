@@ -58,9 +58,8 @@ async function addOrder(req, res, next) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const address = user.address.find(
-      (item) => item._id.toString() === addressId
-    );
+    const address = user.address.id(addressId);
+
     if (!address) {
       return res.status(404).json({ message: "Address not found" });
     }

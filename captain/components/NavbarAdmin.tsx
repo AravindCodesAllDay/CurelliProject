@@ -3,16 +3,39 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-
 import logo from "@/assets/logo.png";
 
 export default function NavbarAdmin() {
   const router: any = useRouter();
   const pathname = router.pathname;
 
+  const verify = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}admin/admin`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        }
+      );
+      if (!response.ok) {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      router.push("/");
+    }
+  };
+
+  useEffect(() => {
+    verify();
+  }, []);
+
   const signout = () => {
     localStorage.clear();
-    router.push("/login");
+    router.push("/");
   };
 
   return (

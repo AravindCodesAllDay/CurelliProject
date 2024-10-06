@@ -68,7 +68,7 @@ const Checkout: React.FC = () => {
 
   useEffect(() => {
     if (!loading && cartItems.length === 0) {
-      router.push("/cart");
+      router.push("/orders");
     }
   }, [loading, cartItems, router]);
 
@@ -133,13 +133,16 @@ const Checkout: React.FC = () => {
                   <div className="flex flex-col gap-3 bg-white rounded-lg p-4">
                     {userAddress.map((data) => (
                       <div
-                        className={`flex items-center rounded border-2 p-1 gap-2 text-sm md:text-base cursor-pointer ${
+                        className={`flex items-center rounded border-2 p-1 gap-2 text-sm md:text-base cursor-pointer hover:border-green-600 hover:bg-green-50 ${
                           addressId === data._id
-                            ? "border-green-600 bg-green-50"
+                            ? "border-green-600 bg-green-100"
                             : ""
                         }`}
                         key={data._id}
-                        onClick={() => setAddressId(data._id)}
+                        onClick={() => {
+                          setAddressId(data._id);
+                          setGetAddress(true);
+                        }}
                       >
                         <span className="flex flex-col cursor-pointer">
                           <p>
@@ -160,33 +163,21 @@ const Checkout: React.FC = () => {
                       + Add Address
                     </button>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <button
-                      className="bg-white text-green-800 py-2 px-4 rounded hover:scale-110"
-                      onClick={() => {
-                        if (addressId !== "") {
-                          setGetAddress(true);
-                        } else {
-                          toast.error("Select Address first");
-                        }
-                      }}
-                    >
-                      Use this address
-                    </button>
-                  </div>
                 </>
               )}
               {getAddress && (
                 <div className="bg-white rounded-lg p-3 flex items-center">
                   <p>
-                    Selected Address:{" "}
-                    {
-                      userAddress.find((addr) => addr._id === addressId)
-                        ?.address
-                    }
+                    Selected Address :
+                    <span className="font-semibold">
+                      {
+                        userAddress.find((addr) => addr._id === addressId)
+                          ?.address
+                      }
+                    </span>
                   </p>
                   <button
-                    className="text-green-800 py-1 ml-auto border"
+                    className="text-green-800 p-1 ml-auto border-2 rounded-lg font-semibold"
                     onClick={() => setGetAddress(false)}
                   >
                     Edit Address
@@ -203,57 +194,42 @@ const Checkout: React.FC = () => {
                 <>
                   <div className="bg-white rounded-lg p-4 flex flex-col gap-3">
                     <div
-                      className={`cursor-pointer rounded border-2 p-1 ${
+                      className={`cursor-pointer rounded border-2 p-1 hover:border-green-600 hover:bg-green-50 ${
                         paymentmethod == "cash"
-                          ? "border-green-600 bg-green-50"
+                          ? "border-green-600 bg-green-100"
                           : ""
                       }`}
-                      onClick={() => setPaymentmethod("cash")}
+                      onClick={() => {
+                        setPaymentmethod("cash");
+                        setShowPaymentMethod(true);
+                      }}
                     >
                       <span>Cash On Delivery</span>
                     </div>
                     <div
-                      className={`cursor-pointer rounded border-2 p-1 ${
+                      className={`cursor-pointer rounded border-2 p-1 hover:border-green-600 hover:bg-green-50 ${
                         paymentmethod == "upi"
-                          ? "border-green-600 bg-green-50"
+                          ? "border-green-600 bg-green-100"
                           : ""
                       }`}
-                      onClick={() => setPaymentmethod("upi")}
+                      onClick={() => {
+                        setPaymentmethod("upi");
+                        setShowPaymentMethod(true);
+                      }}
                     >
                       <span>UPI</span>
                     </div>
-                    <div
-                      className={`cursor-pointer rounded border-2 p-1 ${
-                        paymentmethod == "emi"
-                          ? "border-green-600 bg-green-50"
-                          : ""
-                      }`}
-                      onClick={() => setPaymentmethod("emi")}
-                    >
-                      <span>EMI</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      className="bg-white text-green-800 py-2 px-4 rounded hover:scale-110"
-                      onClick={() => {
-                        if (paymentmethod !== "") {
-                          setShowPaymentMethod(true);
-                        } else {
-                          toast.error("Select Payment method to submit");
-                        }
-                      }}
-                    >
-                      Use this payment method
-                    </button>
                   </div>
                 </>
               )}
               {showPaymentMethod && (
                 <div className="bg-white rounded-lg p-3 flex items-center">
-                  <p>Selected Payment Method: {paymentmethod}</p>
+                  <p>
+                    Selected Payment Method:{" "}
+                    <span className="font-semibold">{paymentmethod}</span>
+                  </p>
                   <button
-                    className="text-green-800 py-1 ml-auto"
+                    className="text-green-800 p-1 ml-auto border-2 rounded-lg font-semibold"
                     onClick={() => setShowPaymentMethod(false)}
                   >
                     Edit Payment Method
