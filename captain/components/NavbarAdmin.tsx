@@ -51,7 +51,16 @@ export default function NavbarAdmin() {
       </div>
       <div className="flex items-center justify-between px-4 lg:px-10 py-4 lg:py-13 relative w-full bg-[#40773b]">
         <div className="flex items-center gap-[16px] relative">
-          <MenuItem label="Products" path="/" currentPath={pathname} />
+          <MenuItem
+            label="Products"
+            path="/admin/products"
+            currentPath={pathname}
+          />
+          <MenuItem
+            label="Carousel"
+            path="/admin/carousel"
+            currentPath={pathname}
+          />
         </div>
         <div>
           <button
