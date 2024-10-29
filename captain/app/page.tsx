@@ -17,6 +17,15 @@ const Login = () => {
   const [pswd, setPswd] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const status = localStorage.getItem("status");
+
+    if (token && status) {
+      router.push(`/${status}/orders`);
+    }
+  }, [router]);
+
   const handleSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -37,6 +46,7 @@ const Login = () => {
       const { token, status } = await response.json();
 
       localStorage.setItem("token", token);
+      localStorage.setItem("status", status);
       router.push(`/${status}/orders`);
     } catch (error) {
       console.error("Error during login:", (error as Error).message);

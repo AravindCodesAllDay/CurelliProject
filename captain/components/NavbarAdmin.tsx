@@ -21,6 +21,7 @@ export default function NavbarAdmin() {
         }
       );
       if (!response.ok) {
+        localStorage.clear();
         router.push("/");
       }
     } catch (error) {
@@ -52,6 +53,11 @@ export default function NavbarAdmin() {
       <div className="flex items-center justify-between px-4 lg:px-10 py-4 lg:py-13 relative w-full bg-[#40773b]">
         <div className="flex items-center gap-[16px] relative">
           <MenuItem
+            label="Orders"
+            path="/admin/orders"
+            currentPath={pathname}
+          />
+          <MenuItem
             label="Products"
             path="/admin/products"
             currentPath={pathname}
@@ -59,6 +65,11 @@ export default function NavbarAdmin() {
           <MenuItem
             label="Carousel"
             path="/admin/carousel"
+            currentPath={pathname}
+          />
+          <MenuItem
+            label="PopularProducts"
+            path="/admin/popular"
             currentPath={pathname}
           />
         </div>

@@ -22,6 +22,7 @@ export default function NavbarSubadmin() {
         }
       );
       if (!response.ok) {
+        localStorage.clear();
         router.push("/");
       }
     } catch (error) {
@@ -52,7 +53,11 @@ export default function NavbarSubadmin() {
       </div>
       <div className="flex items-center justify-between px-4 lg:px-10 py-4 lg:py-13 relative w-full bg-[#40773b]">
         <div className="flex items-center gap-[16px] relative">
-          <MenuItem label="Products" path="/" currentPath={pathname} />
+          <MenuItem
+            label="Orders"
+            path="/subadmin/orders"
+            currentPath={pathname}
+          />
         </div>
         <div>
           <button
