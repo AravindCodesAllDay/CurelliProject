@@ -49,9 +49,7 @@ exports.addCarousel = async (req, res, next) => {
       mobile: type,
     });
 
-    res
-      .status(200)
-      .send(`Images inserted successfully for ${type ? "mobile" : "desktop"}.`);
+    res.status(200).send(`Images inserted successfully`);
   } catch (error) {
     console.error("Error processing request:", error);
     res.status(500).send("Error processing request.");

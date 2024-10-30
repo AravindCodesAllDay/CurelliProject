@@ -14,7 +14,7 @@ export default function NavbarSubadmin() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}admin/subadmin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/subadmin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

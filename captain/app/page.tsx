@@ -31,7 +31,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}admin/login`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -76,7 +76,7 @@ const Login = () => {
           const { email } = res.data;
           try {
             const loginRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API}admin/googleLogin`,
+              `${process.env.NEXT_PUBLIC_API_URL}/admin/googleLogin`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

@@ -16,7 +16,7 @@ export default function Page() {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API}orders`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`);
         if (!res.ok) {
           throw new Error("Failed to fetch data");
         }

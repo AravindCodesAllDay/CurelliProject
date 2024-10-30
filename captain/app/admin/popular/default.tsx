@@ -12,14 +12,14 @@ export default function Carousel() {
   const [images, setImages] = useState<CarouselItem | null>(null);
 
   function navigate() {
-    nav.push("/admin/carousel/addcarousel");
+    nav.push("/admin/popular/addpopular");
   }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/carousel`,
+          `${process.env.NEXT_PUBLIC_API_URL}/bestseller`,
           {
             method: "GET",
             headers: {
@@ -50,12 +50,6 @@ export default function Carousel() {
           {images &&
             images.lap.map((photo, index) => (
               <img src={photo} alt={`laptop image:${index + 1}`} key={index} />
-            ))}
-        </div>
-        <div className="grid grid-cols-4">
-          {images &&
-            images.mobile.map((photo, index) => (
-              <img src={photo} alt={`mobile image:${index + 1}`} key={index} />
             ))}
         </div>
       </div>

@@ -13,7 +13,7 @@ export default function NavbarAdmin() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}admin/admin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/admin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

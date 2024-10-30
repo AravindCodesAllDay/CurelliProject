@@ -1,29 +1,25 @@
-const BestSeller = require("../models/bestsellerModel");
-const Products = require("../models/productModel");
+const Bestseller = require("../models/bestsellerModel");
+const Product = require("../models/productModel");
 
-async function getBestseller(req, res, next) {
+async function getBestseller(req, res) {
   try {
-    const bestsellers = await BestSeller.find().populate({
-      path: "products.productId",
+    const bestsellers = await Bestseller.find().populate({
+      path: "productId",
       select: "name rating photos description price status ratingcount",
     });
 
-    const inStockProducts =
-      bestsellers.length > 0
-        ? bestsellers[0].products
-            .filter((item) => item.productId.status === "inStock")
-            .map((item) => ({
-              productId: item.productId._id,
-              name: item.productId.name,
-              rating: item.productId.rating,
-              photos: item.productId.photos,
-              description: item.productId.description,
-              price: item.productId.price,
-              status: item.productId.status,
-              ratingcount: item.productId.ratingcount,
-              tag: item.tag,
-            }))
-        : [];
+    const inStockProducts = bestsellers
+      .filter((item) => item.productId && item.productId.status === "inStock")
+      .map((item) => ({
+        productId: item.productId._id,
+        name: item.productId.name,
+        rating: item.productId.rating,
+        photos: item.productId.photos,
+        description: item.productId.description,
+        price: item.productId.price,
+        ratingcount: item.productId.ratingcount,
+        tag: item.tag,
+      }));
 
     res.json(inStockProducts);
   } catch (err) {
@@ -31,7 +27,7 @@ async function getBestseller(req, res, next) {
   }
 }
 
-async function addBestseller(req, res, next) {
+async function addBestseller(req, res) {
   try {
     const { products } = req.body;
 
@@ -39,28 +35,29 @@ async function addBestseller(req, res, next) {
       return res.status(400).json({ message: "All values must be provided" });
     }
 
-    const foundProducts = await Promise.all(
+    const validProducts = await Promise.all(
       products.map(async (item) => {
-        const product = await Products.findById(item.productId);
-        if (!product) {
-          return null;
-        }
-        return item;
+        const product = await Product.findById(item.productId);
+        return product ? item : null;
       })
     );
 
-    const validProducts = foundProducts.filter((item) => item !== null);
+    const filteredProducts = validProducts.filter((item) => item !== null);
 
-    if (validProducts.length === 0) {
+    if (filteredProducts.length === 0) {
       return res.status(404).json({ message: "No valid products found" });
     }
-    await BestSeller.deleteMany();
-    const bestseller = new BestSeller({ products: validProducts });
-    await bestseller.save();
 
-    res
-      .status(201)
-      .json({ message: "Bestseller added successfully", bestseller });
+    await Bestseller.deleteMany();
+    const bestsellers = filteredProducts.map(
+      (item) => new Bestseller({ productId: item.productId, tag: item.tag })
+    );
+    await Bestseller.insertMany(bestsellers);
+
+    res.status(201).json({
+      message: "Bestseller added successfully",
+      bestsellers,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
