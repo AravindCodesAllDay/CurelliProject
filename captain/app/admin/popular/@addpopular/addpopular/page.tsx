@@ -101,7 +101,6 @@ export default function AddProductForm() {
     fetchData();
   }, []);
 
-  // Filter out already selected product IDs for each select dropdown
   const getAvailableProducts = (currentIndex: number) => {
     const selectedProductIds = formData
       .slice(0, currentIndex)
@@ -134,7 +133,7 @@ export default function AddProductForm() {
                 name="productId"
                 value={data.productId}
                 onChange={(e) => handleChange(index, e)}
-                className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="" disabled>
                   Select Product
@@ -151,7 +150,7 @@ export default function AddProductForm() {
                 value={data.tag}
                 onChange={(e) => handleChange(index, e)}
                 placeholder="Tag"
-                className="block w-full text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="block w-full p-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           ))}

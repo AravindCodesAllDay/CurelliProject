@@ -76,7 +76,7 @@ const Login = () => {
           const { email } = res.data;
           try {
             const loginRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/admin/googleLogin`,
+              `${process.env.NEXT_PUBLIC_API_URL}/admin/google`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -88,9 +88,10 @@ const Login = () => {
               throw new Error("Login failed");
             }
 
-            const { token } = await loginRes.json();
+            const { token, status } = await loginRes.json();
             localStorage.setItem("token", token);
-            router.push("/orders");
+            localStorage.setItem("status", status);
+            router.push(`/${status}/orders`);
           } catch (error) {
             console.error("Error during login:", (error as Error).message);
             toast.error("Error during login, try again later");

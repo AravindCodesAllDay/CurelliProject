@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Stars from "@/components/Stars";
+import { useRouter } from "next/navigation";
 
 interface Product {
   _id: string;
@@ -12,6 +13,7 @@ interface Product {
 }
 
 export default function Products() {
+  const nav = useRouter();
   const [cardDetails, setCardDetails] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -41,6 +43,10 @@ export default function Products() {
     fetchData();
   }, []);
 
+  function navigate(productId: string) {
+    nav.push(`/admin/products/${productId}`);
+  }
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
       {cardDetails.map((details) => (
@@ -49,7 +55,10 @@ export default function Products() {
           className="card-container flex flex-row flex-wrap justify-center group/main"
         >
           <div className="relative w-full max-w-[290px] border-2 max-h-[400px] hover:shadow-2xl flex flex-col justify-between m-2 lg:my-5 transition-shadow duration-150 ease-out">
-            <div className="relative max-h-[250px] w-full h-full">
+            <div
+              className="relative  w-full h-full"
+              onClick={() => navigate(details._id)}
+            >
               <img
                 src={details.photos[0]}
                 alt={details.name}

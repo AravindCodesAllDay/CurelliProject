@@ -7,6 +7,7 @@ import Modal from "@/components/Modal";
 interface FormData {
   type: boolean;
   images: FileList | null;
+  imagePreviews: string[];
 }
 
 export default function AddProductForm() {
@@ -14,6 +15,7 @@ export default function AddProductForm() {
   const [formData, setFormData] = useState<FormData>({
     type: false,
     images: null,
+    imagePreviews: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +29,18 @@ export default function AddProductForm() {
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      images: e.target.files,
-    });
+    const files = e.target.files;
+    if (files) {
+      const imagePreviews = Array.from(files).map((file) =>
+        URL.createObjectURL(file)
+      );
+
+      setFormData({
+        ...formData,
+        images: files,
+        imagePreviews,
+      });
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -63,6 +73,7 @@ export default function AddProductForm() {
       setFormData({
         type: false,
         images: null,
+        imagePreviews: [],
       });
       nav.push("/admin/carousel");
     } catch (error) {
@@ -89,16 +100,19 @@ export default function AddProductForm() {
             Carousel Changed successfully!
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[500px]"
+        >
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Product type
+              Image type
             </label>
             <select
               name="type"
               value={String(formData.type)}
               onChange={handleChange}
-              className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="false">Laptop</option>
               <option value="true">Mobile</option>
@@ -117,7 +131,18 @@ export default function AddProductForm() {
               className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-
+          {formData.imagePreviews.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              {formData.imagePreviews.map((preview, index) => (
+                <img
+                  key={index}
+                  src={preview}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded-md shadow-sm"
+                />
+              ))}
+            </div>
+          )}
           <button
             type="submit"
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"

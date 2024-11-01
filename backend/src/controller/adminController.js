@@ -67,6 +67,7 @@ exports.googleLogin = async (req, res) => {
 
     return res.status(200).json({
       message: "Login Successful",
+      status: role,
       token,
     });
   } catch (error) {
