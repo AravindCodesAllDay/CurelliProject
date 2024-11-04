@@ -126,7 +126,10 @@ export default function AddProductForm() {
             Bestseller added successfully!
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto max-h-[500px]"
+        >
           {formData.map((data, index) => (
             <div key={index} className="flex items-center space-x-2">
               <select

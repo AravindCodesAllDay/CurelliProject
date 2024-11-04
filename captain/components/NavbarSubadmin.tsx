@@ -1,14 +1,14 @@
 "use client";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
 import logo from "@/assets/logo.png";
 
 export default function NavbarSubadmin() {
-  const router: any = useRouter();
-  const pathname = router.pathname;
+  const router = useRouter();
+  const pathname = usePathname();
 
   const verify = async () => {
     try {

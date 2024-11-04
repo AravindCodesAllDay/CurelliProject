@@ -2,7 +2,7 @@
 import Products from "./Products";
 import { useRouter } from "next/navigation";
 
-export default function page() {
+export default function Page() {
   const nav = useRouter();
 
   function navigate() {

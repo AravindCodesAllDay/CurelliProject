@@ -1,5 +1,5 @@
 "use client";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Modal from "@/components/Modal";
@@ -12,10 +12,28 @@ interface FormData {
   ratingcount: string;
   images: FileList | null;
   imagePreviews: string[];
+  status: string;
 }
 
-export default function AddProductForm() {
-  const nav = useRouter();
+interface ProductDetails {
+  _id: string;
+  photos: string[];
+  name: string;
+  description: string;
+  rating: number;
+  ratingcount: number;
+  status: string;
+  price: number;
+}
+
+export default function UpdateProductForm({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const slug = params.slug;
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     price: "",
@@ -24,13 +42,41 @@ export default function AddProductForm() {
     ratingcount: "",
     images: null,
     imagePreviews: [],
+    status: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`
+        );
+        const productData: ProductDetails = response.data;
+
+        setFormData({
+          name: productData.name,
+          price: productData.price.toString(),
+          description: productData.description,
+          rating: productData.rating.toString(),
+          ratingcount: productData.ratingcount.toString(),
+          images: null,
+          imagePreviews: productData.photos,
+          status: productData.status,
+        });
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+        router.push("/admin/products");
+      }
+    };
+
+    fetchProductData();
+  }, [slug, router]);
+
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData({
       ...formData,
@@ -65,6 +111,7 @@ export default function AddProductForm() {
     data.append("description", formData.description);
     data.append("rating", formData.rating);
     data.append("ratingcount", formData.ratingcount);
+    data.append("status", formData.status);
 
     if (formData.images) {
       for (let i = 0; i < formData.images.length; i++) {
@@ -73,8 +120,8 @@ export default function AddProductForm() {
     }
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`,
         data,
         {
           headers: {
@@ -82,22 +129,13 @@ export default function AddProductForm() {
           },
         }
       );
-      console.log("Product added:", response.data);
-      setSuccess(true);
 
-      setFormData({
-        name: "",
-        price: "",
-        description: "",
-        rating: "",
-        ratingcount: "",
-        images: null,
-        imagePreviews: [],
-      });
-      nav.push("/admin/products");
+      console.log("Product updated:", response.data);
+      setSuccess(true);
+      router.push("/admin/products");
     } catch (error) {
-      console.error("Error adding product:", error);
-      setError("There was an error adding the product. Please try again.");
+      console.error("Error updating product:", error);
+      setError("There was an error updating the product. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +145,7 @@ export default function AddProductForm() {
     <Modal>
       <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-          Add New Product
+          Edit Product
         </h2>
         {error && (
           <div className="mb-4 text-red-600 bg-red-100 p-3 rounded">
@@ -116,7 +154,7 @@ export default function AddProductForm() {
         )}
         {success && (
           <div className="mb-4 text-green-600 bg-green-100 p-3 rounded">
-            Product added successfully!
+            Product updated successfully!
           </div>
         )}
         <form
@@ -195,6 +233,21 @@ export default function AddProductForm() {
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              name="status"
+              value={String(formData.status)}
+              onChange={handleChange}
+              className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="inStock">inStock</option>
+              <option value="noStock">noStock</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -205,7 +258,6 @@ export default function AddProductForm() {
               name="images"
               multiple
               onChange={handleFileChange}
-              required
               className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
@@ -226,7 +278,7 @@ export default function AddProductForm() {
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             disabled={loading}
           >
-            {loading ? "Adding Product..." : "Add Product"}
+            {loading ? "Updating Product..." : "Update Product"}
           </button>
         </form>
       </div>

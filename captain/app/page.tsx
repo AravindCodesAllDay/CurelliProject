@@ -3,7 +3,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
-import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import {
+  googleLogout,
+  useGoogleLogin,
+  TokenResponse,
+} from "@react-oauth/google";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,10 +16,10 @@ import google from "@/assets/google.png";
 
 const Login = () => {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<TokenResponse | null>(null);
   const [mail, setMail] = useState<string>("");
   const [pswd, setPswd] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");

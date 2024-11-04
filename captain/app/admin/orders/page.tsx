@@ -1,11 +1,39 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
+
+interface Product {
+  productId: {
+    photos: string[];
+    name: string;
+  };
+  quantity: number;
+}
+
+interface Order {
+  _id: string;
+  date: string;
+  products: Product[];
+  totalPrice: number;
+  paymentmethod: string;
+  address: {
+    address: string;
+    district: string;
+    state: string;
+    pincode: string;
+    addressContact: string;
+  };
+}
 
 export default function Page() {
-  const [orders, setOrders] = useState({
-    pending: [] as any[],
-    delivered: [] as any[],
-    cancelled: [] as any[],
+  const [orders, setOrders] = useState<{
+    pending: Order[];
+    delivered: Order[];
+    cancelled: Order[];
+  }>({
+    pending: [],
+    delivered: [],
+    cancelled: [],
   });
   const [showCompletedOrders, setShowCompletedOrders] = useState(false);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
@@ -58,6 +86,7 @@ export default function Page() {
       </div>
     );
   }
+
   return (
     <div className="max-w-4xl mx-auto py-8 items-center">
       <div className="flex space-x-2 mb-4">
@@ -105,7 +134,7 @@ export default function Page() {
         {Array.isArray(ordersToShow) && ordersToShow.length === 0 ? (
           <div>No orders found.</div>
         ) : (
-          ordersToShow.map((order: any, index: number) => (
+          ordersToShow.map((order, index) => (
             <div key={index} className="bg-white rounded shadow-md">
               <div className="flex w-full p-4 items-center bg-green-700 text-white">
                 <div className="flex items-center">
@@ -120,19 +149,21 @@ export default function Page() {
               <table className="w-full p-4">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2">ProductImage</th>
+                    <th className="py-2">Product Image</th>
                     <th className="py-2">Product</th>
                     <th className="py-2">Quantity</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.products.map((product: any, index: number) => (
+                  {order.products.map((product, index) => (
                     <tr key={index} className="border-b">
                       <td className="py-2">
-                        <img
+                        <Image
                           src={product.productId.photos[0]}
                           alt={product.productId.name}
                           className="h-14 mx-auto"
+                          width={50}
+                          height={50}
                         />
                       </td>
                       <td className="py-2 text-center">
@@ -148,10 +179,8 @@ export default function Page() {
               </div>
               <div>{order.paymentmethod}</div>
               <div>
-                {order.address.address}
-                {order.address.district}
-                {order.address.state}
-                {order.address.pincode}
+                {order.address.address}, {order.address.district},{" "}
+                {order.address.state}, {order.address.pincode},{" "}
                 {order.address.addressContact}
               </div>
             </div>

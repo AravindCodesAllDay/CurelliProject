@@ -10,7 +10,7 @@ interface FormData {
   imagePreviews: string[];
 }
 
-export default function AddProductForm() {
+export default function AddCarouselForm() {
   const nav = useRouter();
   const [formData, setFormData] = useState<FormData>({
     type: false,
@@ -128,7 +128,7 @@ export default function AddProductForm() {
               multiple
               onChange={handleFileChange}
               required
-              className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           {formData.imagePreviews.length > 0 && (
