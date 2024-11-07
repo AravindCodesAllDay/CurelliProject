@@ -58,7 +58,34 @@ export default function PopularProducts() {
 
   return (
     <>
-      <button onClick={navigate}>Add Product</button>
+      <div
+        className="bg-green-600 p-2 m-5 rounded
+       flex items-center justify-center font-bold"
+      >
+        <h2 className="text-lg text-white">Popular Products Page</h2>
+        <button
+          className="bg-blue-500 flex gap-1 justify-center items-center rounded ml-auto p-1 border-2 text-sm text-white"
+          onClick={navigate}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            className="size-6"
+            stroke-width="2"
+          >
+            <path d="M4 8h4v4h-4z"></path> <path d="M6 4l0 4"></path>{" "}
+            <path d="M6 12l0 8"></path> <path d="M10 14h4v4h-4z"></path>{" "}
+            <path d="M12 4l0 10"></path> <path d="M12 18l0 2"></path>{" "}
+            <path d="M16 5h4v4h-4z"></path> <path d="M18 4l0 1"></path>{" "}
+            <path d="M18 9l0 11"></path>{" "}
+          </svg>
+          Set Popular Products
+        </button>
+      </div>
       {fetchError && <div className="text-red-600 mt-2 mb-4">{fetchError}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cardDetails.map((details) => (

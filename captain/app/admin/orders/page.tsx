@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 
 interface Product {
   productId: {
     photos: string[];
     name: string;
+    description: string;
+    price: Number;
+    rating: Number;
+    ratingcount: Number;
+    status: string;
   };
   quantity: number;
 }
@@ -158,12 +162,10 @@ export default function Page() {
                   {order.products.map((product, index) => (
                     <tr key={index} className="border-b">
                       <td className="py-2">
-                        <Image
+                        <img
                           src={product.productId.photos[0]}
                           alt={product.productId.name}
                           className="h-14 mx-auto"
-                          width={50}
-                          height={50}
                         />
                       </td>
                       <td className="py-2 text-center">

@@ -27,6 +27,7 @@ export default function NavbarSubadmin() {
       }
     } catch (error) {
       console.error("Verification error:", error);
+      localStorage.clear();
       router.push("/");
     }
   };
@@ -45,7 +46,8 @@ export default function NavbarSubadmin() {
       <div className="flex flex-col items-center justify-center p-2 relative w-full">
         <Link href="/">
           <Image
-            className="relative h-12 md:h-20 object-contain"
+            className="relative w-auto h-12 md:h-20 object-contain"
+            placeholder="blur"
             alt="Logo"
             src={logo}
           />

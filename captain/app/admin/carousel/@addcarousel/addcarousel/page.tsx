@@ -114,7 +114,7 @@ export default function AddCarouselForm() {
               onChange={handleChange}
               className="mt-1 p-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="false">Laptop</option>
+              <option value="false">Desktop</option>
               <option value="true">Mobile</option>
             </select>
           </div>

@@ -27,6 +27,7 @@ export default function NavbarAdmin() {
       }
     } catch (error) {
       console.error("Verification error:", error);
+      localStorage.clear();
       router.push("/");
     }
   };
@@ -45,8 +46,9 @@ export default function NavbarAdmin() {
       <div className="flex flex-col items-center justify-center p-2 relative w-full">
         <Link href="/">
           <Image
-            className="relative h-12 md:h-20 object-contain"
+            className="relative w-auto h-12 md:h-20 object-contain"
             alt="Logo"
+            placeholder="blur"
             src={logo}
           />
         </Link>

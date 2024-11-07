@@ -44,7 +44,7 @@ export default function Products() {
   }, []);
 
   function navigate(productId: string) {
-    nav.push(`/admin/products/${productId}`);
+    nav.push(`/admin/products/editproduct/${productId}`);
   }
 
   return (

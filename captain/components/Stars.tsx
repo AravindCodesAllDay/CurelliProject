@@ -1,10 +1,10 @@
 import React from "react";
 
-interface Stars {
+interface StarsProps {
   rating: number;
 }
 
-export default function Stars({ rating }: Stars) {
+export default function Stars({ rating }: StarsProps) {
   const stars = Array.from({ length: 5 }, (_, index) => index + 1);
 
   return (
@@ -12,6 +12,7 @@ export default function Stars({ rating }: Stars) {
       {stars.map((star) => {
         const fillPercentage =
           Math.min(Math.max(rating - (star - 1), 0), 1) * 100;
+
         return (
           <span key={star} className="relative">
             <svg
