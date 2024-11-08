@@ -1,43 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 
-interface Product {
-  productId: {
-    photos: string[];
-    name: string;
-    description: string;
-    price: Number;
-    rating: Number;
-    ratingcount: Number;
-    status: string;
-  };
-  quantity: number;
-}
-
-interface Order {
-  _id: string;
-  date: string;
-  products: Product[];
-  totalPrice: number;
-  paymentmethod: string;
-  address: {
-    address: string;
-    district: string;
-    state: string;
-    pincode: string;
-    addressContact: string;
-  };
-}
-
 export default function Page() {
-  const [orders, setOrders] = useState<{
-    pending: Order[];
-    delivered: Order[];
-    cancelled: Order[];
-  }>({
-    pending: [],
-    delivered: [],
-    cancelled: [],
+  const [orders, setOrders] = useState({
+    pending: [] as any[],
+    delivered: [] as any[],
+    cancelled: [] as any[],
   });
   const [showCompletedOrders, setShowCompletedOrders] = useState(false);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
@@ -45,28 +13,52 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const data = await res.json();
-        setOrders(data);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching user orders:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDetails();
   }, []);
+
+  const fetchDetails = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      const data = await res.json();
+      setOrders(data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching user orders:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
+      if (!res.ok) {
+        throw new Error("Failed to update order status");
+      }
+      await fetchDetails();
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    }
+  };
 
   let ordersToShow = orders.pending;
   if (showCompletedOrders) {
@@ -138,7 +130,7 @@ export default function Page() {
         {Array.isArray(ordersToShow) && ordersToShow.length === 0 ? (
           <div>No orders found.</div>
         ) : (
-          ordersToShow.map((order, index) => (
+          ordersToShow.map((order: any, index: number) => (
             <div key={index} className="bg-white rounded shadow-md">
               <div className="flex w-full p-4 items-center bg-green-700 text-white">
                 <div className="flex items-center">
@@ -153,13 +145,13 @@ export default function Page() {
               <table className="w-full p-4">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2">Product Image</th>
+                    <th className="py-2">ProductImage</th>
                     <th className="py-2">Product</th>
                     <th className="py-2">Quantity</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.products.map((product, index) => (
+                  {order.products.map((product: any, index: number) => (
                     <tr key={index} className="border-b">
                       <td className="py-2">
                         <img
@@ -179,11 +171,37 @@ export default function Page() {
               <div className="text-lg p-4 border-t-2 border-green-800">
                 Total Price: {order.totalPrice}
               </div>
-              <div>{order.paymentmethod}</div>
-              <div>
-                {order.address.address}, {order.address.district},{" "}
-                {order.address.state}, {order.address.pincode},{" "}
-                {order.address.addressContact}
+              <div className="px-4">
+                <div>{order.paymentmethod}</div>
+                <div>
+                  {order.address.address},{order.address.district},
+                  {order.address.state},{order.address.pincode},
+                  {order.address.addressContact}
+                </div>
+              </div>
+
+              <div className="flex space-x-4 p-4">
+                {order.orderStatus !== "delivered" &&
+                  order.orderStatus !== "cancelled" && (
+                    <>
+                      <button
+                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                        onClick={() =>
+                          updateOrderStatus(order._id, "delivered")
+                        }
+                      >
+                        Mark as Delivered
+                      </button>
+                      <button
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                        onClick={() =>
+                          updateOrderStatus(order._id, "cancelled")
+                        }
+                      >
+                        Mark as Cancelled
+                      </button>
+                    </>
+                  )}
               </div>
             </div>
           ))

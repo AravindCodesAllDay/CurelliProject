@@ -113,30 +113,6 @@ async function addOrder(req, res, next) {
   }
 }
 
-async function changeOrderStatus(req, res, next) {
-  try {
-    const { orderId } = req.params();
-    const { status } = req.body();
-    if (!orderId || !status) {
-      return res
-        .status(400)
-        .json({ message: "Invalid format or missing parameters" });
-    }
-    const order = await Orders.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({ message: "order not found" });
-    }
-
-    order.orderStatus = status;
-    await order.save();
-    return res.status(200).json(order);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: error.message });
-  }
-}
-
 async function deleteOrder(req, res, next) {
   try {
     const { OrderId: orderId, userId } = req.body;
@@ -165,11 +141,37 @@ async function deleteOrder(req, res, next) {
   }
 }
 
+async function updateStatus(req, res, next) {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    if (!orderId || !status) {
+      return res.status(400).json({ message: "Order ID and new status are required." });
+    }
+
+    const order = await Orders.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.orderStatus = status;
+    await order.save();
+
+    return res.status(200).json({
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 module.exports = {
   getUserOrders,
   getOrders,
   getOrder,
   addOrder,
-  changeOrderStatus,
+  updateStatus,
   deleteOrder,
 };
