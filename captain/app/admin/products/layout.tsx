@@ -3,7 +3,7 @@ import React from "react";
 import Products from "./Products";
 import { useRouter } from "next/navigation";
 
-export default function layout({
+export default function Layout({
   children,
   addproduct,
 }: Readonly<{

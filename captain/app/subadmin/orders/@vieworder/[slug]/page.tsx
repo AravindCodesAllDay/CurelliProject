@@ -38,10 +38,6 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  useEffect(() => {
-    fetchDetails();
-  }, []);
-
   const fetchDetails = async () => {
     try {
       setLoading(true);
@@ -63,6 +59,10 @@ export default function Page({ params }: { params: { slug: string } }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDetails();
+  }, []);
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {

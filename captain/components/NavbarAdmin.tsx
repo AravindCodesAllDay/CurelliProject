@@ -10,31 +10,31 @@ export default function NavbarAdmin() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const verify = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/admin`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
+  useEffect(() => {
+    const verify = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/admin/admin`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+          }
+        );
+        if (!response.ok) {
+          localStorage.clear();
+          router.push("/");
         }
-      );
-      if (!response.ok) {
+      } catch (error) {
+        console.error("Verification error:", error);
         localStorage.clear();
         router.push("/");
       }
-    } catch (error) {
-      console.error("Verification error:", error);
-      localStorage.clear();
-      router.push("/");
-    }
-  };
+    };
 
-  useEffect(() => {
     verify();
-  }, []);
+  }, [router]);
 
   const signout = () => {
     localStorage.clear();
