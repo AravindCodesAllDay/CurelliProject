@@ -24,7 +24,7 @@ export default function layout({
       >
         <h2 className="text-lg text-white">Products Page</h2>
         <button
-          className="bg-blue-500 flex gap-1 justify-center items-center rounded ml-auto p-1 border-2 text-sm text-white"
+          className="bg-green-800 flex gap-1 justify-center items-center rounded ml-auto p-1 border-2 text-sm text-white"
           onClick={navigate}
         >
           <svg
@@ -37,7 +37,7 @@ export default function layout({
             stroke-width="3"
             className="size-6"
           >
-            <path d="M12 5l0 14"></path> <path d="M5 12l14 0"></path>{" "}
+            <path d="M12 5l0 14"></path> <path d="M5 12l14 0"></path>
           </svg>
           Add Product
         </button>

@@ -88,11 +88,19 @@ exports.editProduct = async (req, res) => {
     const { _id } = req.params;
     const { name, price, description, status, rating, ratingcount } = req.body;
 
-    let images = [];
-    if (!name || !price || !description || !status || !rating || !ratingcount) {
+    if (
+      !name?.trim() ||
+      !price?.trim() ||
+      !description?.trim() ||
+      !status?.trim() ||
+      !rating?.trim() ||
+      !ratingcount?.trim()
+    ) {
       return res.status(400).json({ message: "Incomplete data" });
     }
-    if (req.files["images"]) {
+
+    let images = [];
+    if (req.files && req.files["images"]) {
       for (let file of req.files["images"]) {
         const uploadParams = {
           Bucket: process.env.S3_BUCKET_NAME,
@@ -102,11 +110,7 @@ exports.editProduct = async (req, res) => {
         };
 
         try {
-          const upload = new Upload({
-            client: s3,
-            params: uploadParams,
-          });
-
+          const upload = new Upload({ client: s3, params: uploadParams });
           const s3Upload = await upload.done();
           images.push(s3Upload.Location);
         } catch (uploadError) {
@@ -115,24 +119,14 @@ exports.editProduct = async (req, res) => {
         }
       }
     }
-    const product = await Products.findById(_id);
 
+    const product = await Products.findById(_id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const update = {
-      name,
-      price,
-      description,
-      status,
-      rating,
-      ratingcount,
-    };
-
-    if (images.length > 0) {
-      update.photos = images;
-    }
+    const update = { name, price, description, status, rating, ratingcount };
+    if (images.length > 0) update.photos = images;
 
     const updatedProduct = await Products.findByIdAndUpdate(_id, update, {
       new: true,
@@ -141,7 +135,9 @@ exports.editProduct = async (req, res) => {
     return res.status(200).json({ message: "Product updated", updatedProduct });
   } catch (error) {
     console.error("Error updating product:", error.message);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error" });
   }
 };
 

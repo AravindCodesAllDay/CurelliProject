@@ -50,7 +50,7 @@ async function getOrders(req, res, next) {
 
 async function getOrder(req, res, next) {
   try {
-    const { orderId } = req.params();
+    const { orderId } = req.params;
     if (!orderId) {
       return res
         .status(400)
@@ -146,7 +146,9 @@ async function updateStatus(req, res, next) {
     const { orderId } = req.params;
     const { status } = req.body;
     if (!orderId || !status) {
-      return res.status(400).json({ message: "Order ID and new status are required." });
+      return res
+        .status(400)
+        .json({ message: "Order ID and new status are required." });
     }
 
     const order = await Orders.findById(orderId);

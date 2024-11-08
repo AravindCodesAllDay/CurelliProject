@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["inStock", "noStock", "suspended"],
+    enum: ["inStock", "noStock", "Suspended"],
     default: "inStock",
   },
 });

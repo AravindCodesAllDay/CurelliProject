@@ -16,7 +16,11 @@ const upload = multer({ storage: storage });
 router.post("/", upload.fields([{ name: "images", maxCount: 5 }]), addProduct);
 router.get("/", getProducts);
 router.get("/:_id", getProduct);
-router.put("/:_id", editProduct);
+router.put(
+  "/:_id",
+  upload.fields([{ name: "images", maxCount: 5 }]),
+  editProduct
+);
 router.delete("/:_id", removeProduct);
 
 module.exports = router;

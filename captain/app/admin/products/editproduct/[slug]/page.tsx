@@ -130,12 +130,20 @@ export default function UpdateProductForm({
         }
       );
 
-      console.log("Product updated:", response.data);
-      setSuccess(true);
-      router.push("/admin/products");
-    } catch (error) {
-      console.error("Error updating product:", error);
-      setError("There was an error updating the product. Please try again.");
+      if (response.status === 200) {
+        console.log("Product updated successfully:", response.data);
+        setSuccess(true);
+        router.push("/admin/products");
+      }
+    } catch (error: any) {
+      console.error(
+        "Error updating product:",
+        error.response?.data || error.message
+      );
+      setError(
+        error.response?.data?.message ||
+          "There was an error updating the product. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -245,7 +253,7 @@ export default function UpdateProductForm({
             >
               <option value="inStock">inStock</option>
               <option value="noStock">noStock</option>
-              <option value="suspended">Suspended</option>
+              <option value="Suspended">Suspended</option>
             </select>
           </div>
 

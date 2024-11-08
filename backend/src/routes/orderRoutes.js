@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.get("/:userId", getUserOrders);
 router.get("/", getOrders);
-router.get("/:orderId", getOrder);
+router.get("/order/:orderId", getOrder);
 router.post("/", addOrder);
 router.patch("/:orderId", updateStatus);
 router.delete("/", deleteOrder);

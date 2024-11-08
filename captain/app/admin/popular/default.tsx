@@ -64,7 +64,7 @@ export default function PopularProducts() {
       >
         <h2 className="text-lg text-white">Popular Products Page</h2>
         <button
-          className="bg-blue-500 flex gap-1 justify-center items-center rounded ml-auto p-1 border-2 text-sm text-white"
+          className="bg-green-800 flex gap-1 justify-center items-center rounded ml-auto p-1 border-2 text-sm text-white"
           onClick={navigate}
         >
           <svg
@@ -77,11 +77,11 @@ export default function PopularProducts() {
             className="size-6"
             stroke-width="2"
           >
-            <path d="M4 8h4v4h-4z"></path> <path d="M6 4l0 4"></path>{" "}
-            <path d="M6 12l0 8"></path> <path d="M10 14h4v4h-4z"></path>{" "}
-            <path d="M12 4l0 10"></path> <path d="M12 18l0 2"></path>{" "}
-            <path d="M16 5h4v4h-4z"></path> <path d="M18 4l0 1"></path>{" "}
-            <path d="M18 9l0 11"></path>{" "}
+            <path d="M4 8h4v4h-4z"></path> <path d="M6 4l0 4"></path>
+            <path d="M6 12l0 8"></path> <path d="M10 14h4v4h-4z"></path>
+            <path d="M12 4l0 10"></path> <path d="M12 18l0 2"></path>
+            <path d="M16 5h4v4h-4z"></path> <path d="M18 4l0 1"></path>
+            <path d="M18 9l0 11"></path>
           </svg>
           Set Popular Products
         </button>
