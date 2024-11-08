@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 
 export default function Layout({
   children,
-  addproduct,
 }: Readonly<{
   children: React.ReactNode;
-  addproduct: React.ReactNode;
 }>) {
   const nav = useRouter();
 
@@ -44,7 +42,6 @@ export default function Layout({
       </div>
       <Products />
       {children}
-      {addproduct}
     </>
   );
 }
