@@ -135,15 +135,9 @@ export default function UpdateProductForm({
         setSuccess(true);
         router.push("/admin/products");
       }
-    } catch (error: any) {
-      console.error(
-        "Error updating product:",
-        error.response?.data || error.message
-      );
-      setError(
-        error.response?.data?.message ||
-          "There was an error updating the product. Please try again."
-      );
+    } catch (error) {
+      console.error("Error updating product:", error);
+      setError("There was an error updating the product. Please try again.");
     } finally {
       setLoading(false);
     }
