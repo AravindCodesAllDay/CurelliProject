@@ -8,11 +8,16 @@ interface FormData {
   name: string;
   price: string;
   description: string;
+  status: string;
   rating: string;
   ratingcount: string;
+  sku: string;
+  weight: string;
+  length: string;
+  breadth: string;
+  height: string;
   images: FileList | null;
   imagePreviews: string[];
-  status: string;
 }
 
 interface ProductDetails {
@@ -20,10 +25,15 @@ interface ProductDetails {
   photos: string[];
   name: string;
   description: string;
+  status: string;
   rating: number;
   ratingcount: number;
-  status: string;
   price: number;
+  sku: string;
+  weight: number;
+  length: number;
+  breadth: number;
+  height: number;
 }
 
 export default function UpdateProductForm({
@@ -40,9 +50,14 @@ export default function UpdateProductForm({
     description: "",
     rating: "",
     ratingcount: "",
+    status: "",
+    sku: "",
+    weight: "",
+    length: "",
+    breadth: "",
+    height: "",
     images: null,
     imagePreviews: [],
-    status: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +72,19 @@ export default function UpdateProductForm({
         const productData: ProductDetails = response.data;
 
         setFormData({
-          name: productData.name,
-          price: productData.price.toString(),
-          description: productData.description,
-          rating: productData.rating.toString(),
-          ratingcount: productData.ratingcount.toString(),
+          name: productData.name || "",
+          price: productData.price?.toString() || "",
+          description: productData.description || "",
+          rating: productData.rating?.toString() || "",
+          ratingcount: productData.ratingcount?.toString() || "",
+          sku: productData.sku?.toString() || "",
+          weight: productData.weight?.toString() || "",
+          length: productData.length?.toString() || "",
+          breadth: productData.breadth?.toString() || "",
+          height: productData.height?.toString() || "",
+          imagePreviews: productData.photos || [],
+          status: productData.status || "",
           images: null,
-          imagePreviews: productData.photos,
-          status: productData.status,
         });
       } catch (error) {
         console.error("Error fetching product data:", error);
@@ -112,6 +132,11 @@ export default function UpdateProductForm({
     data.append("rating", formData.rating);
     data.append("ratingcount", formData.ratingcount);
     data.append("status", formData.status);
+    data.append("sku", formData.sku);
+    data.append("weight", formData.weight);
+    data.append("length", formData.length);
+    data.append("breadth", formData.breadth);
+    data.append("height", formData.height);
 
     if (formData.images) {
       for (let i = 0; i < formData.images.length; i++) {
@@ -250,7 +275,80 @@ export default function UpdateProductForm({
               <option value="Suspended">Suspended</option>
             </select>
           </div>
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Sku
+            </label>
+            <input
+              type="text"
+              name="sku"
+              placeholder="stock keeping unit"
+              value={formData.sku}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Weight
+            </label>
+            <input
+              type="number"
+              name="weight"
+              placeholder="in kg"
+              min={0}
+              value={formData.weight}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Length
+            </label>
+            <input
+              type="number"
+              name="length"
+              placeholder="in cm"
+              min={0}
+              value={formData.length}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Breadth
+            </label>
+            <input
+              type="number"
+              name="breadth"
+              placeholder="in cm"
+              min={0}
+              value={formData.breadth}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Height
+            </label>
+            <input
+              type="number"
+              name="height"
+              placeholder="in cm"
+              min={0}
+              value={formData.height}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Product Images

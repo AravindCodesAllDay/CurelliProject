@@ -8,6 +8,9 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    shiprocketId: {
+      type: String,
+    },
     address: {
       type: addressModel.schema,
       required: true,
@@ -27,13 +30,21 @@ const orderSchema = new mongoose.Schema(
     },
     paymentmethod: {
       type: String,
-      enum: ["cash", "upi"],
+      enum: ["COD", "Prepaid"],
+      required: true,
+    },
+    deliveryPrice: {
+      type: Number,
       required: true,
     },
     totalPrice: {
       type: Number,
       required: true,
     },
+    weight: { type: Number, required: true },
+    length: { type: Number, required: true },
+    breadth: { type: Number, required: true },
+    height: { type: Number, required: true },
     orderStatus: {
       type: String,
       enum: ["pending", "delivered", "cancelled"],

@@ -18,6 +18,7 @@ const addressSchema = new Schema({
     type: String,
     required: true,
   },
+  country: { type: String, default: "India" },
   pincode: {
     type: Number,
     required: true,

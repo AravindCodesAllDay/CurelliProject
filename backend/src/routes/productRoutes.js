@@ -3,7 +3,6 @@ const multer = require("multer");
 const {
   addProduct,
   getProduct,
-  removeProduct,
   editProduct,
   getProducts,
 } = require("../controller/productController");
@@ -21,7 +20,6 @@ router.put(
   upload.fields([{ name: "images", maxCount: 5 }]),
   editProduct
 );
-router.delete("/:_id", removeProduct);
 
 module.exports = router;
 

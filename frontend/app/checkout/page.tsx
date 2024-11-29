@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
+import axios from "axios";
 import AddAddressModal from "@/components/AddAddressModal";
 import { toast } from "react-toastify";
 import Header from "@/components/Header";
@@ -11,6 +11,7 @@ interface CartItem {
   name: string;
   photos: string[];
   price: number;
+  weight: number;
   quantity: number;
 }
 
@@ -33,9 +34,11 @@ const Checkout: React.FC = () => {
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
   const [addressId, setAddressId] = useState<string>("");
   const [paymentmethod, setPaymentmethod] = useState<string>("");
+  const [deliveryPrice, setDeliveryPrice] = useState(0);
+  const [onProcessing, setOnProcessing] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchCartAddressDetails = async () => {
+  const fetchCartAddressDetails = useCallback(async () => {
     try {
       const data = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`
@@ -53,18 +56,22 @@ const Checkout: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedUserId = localStorage.getItem("id");
-      setUserId(storedUserId);
+      if (storedUserId !== userId) {
+        setUserId(storedUserId);
+      }
     }
-  }, []);
+  }, [userId]);
+
   useEffect(() => {
-    if (userId) {
+    if (userId && userAddress.length === 0 && cartItems.length === 0) {
       fetchCartAddressDetails();
     }
-  }, [userId, fetchCartAddressDetails]);
+  }, [userId, userAddress.length, cartItems.length, fetchCartAddressDetails]);
 
   useEffect(() => {
     if (!loading && cartItems.length === 0) {
@@ -72,20 +79,59 @@ const Checkout: React.FC = () => {
     }
   }, [loading, cartItems, router]);
 
+  const calculateDeliveryPrice = async (COD: string) => {
+    try {
+      if (!userId || !addressId) {
+        throw new Error("Missing userId or addressId for delivery calculation");
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/get-delivery/`,
+        { userId, addressId, COD }
+      );
+
+      if (response.status !== 200) {
+        throw new Error("Failed to fetch delivery price");
+      }
+
+      const deliveryPrice = response.data.deliveryPrice;
+      return deliveryPrice;
+    } catch (error) {
+      console.error("Error calculating delivery price:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const fetchDeliveryPrice = async () => {
+      if (addressId && paymentmethod && cartItems.length > 0) {
+        try {
+          const price = await calculateDeliveryPrice(paymentmethod);
+          setDeliveryPrice(price);
+        } catch (error) {
+          toast.error("Error calculating delivery price");
+          console.error(error);
+        }
+      }
+    };
+
+    fetchDeliveryPrice();
+  }, [addressId, paymentmethod, cartItems]);
+
   if (loading) {
     return <p>Loading...</p>;
   }
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cartItems.reduce(
+  const subtotalPrice = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
 
   const handlePlaceOrder = async () => {
     try {
+      setOnProcessing(true);
       const orderRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
+        `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/create-order`,
         {
           method: "POST",
           headers: {
@@ -95,8 +141,6 @@ const Checkout: React.FC = () => {
             userId,
             addressId,
             paymentmethod,
-            totalPrice:
-              totalPrice + Math.round(totalPrice * 0.1) - totalItems * 5,
           }),
         }
       );
@@ -106,6 +150,7 @@ const Checkout: React.FC = () => {
       }
 
       await orderRes.json();
+      setOnProcessing(false);
       router.push("/orders");
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -116,6 +161,8 @@ const Checkout: React.FC = () => {
           "An unknown error occurred."
         );
       }
+
+      setOnProcessing(false);
     }
   };
   return (
@@ -195,12 +242,12 @@ const Checkout: React.FC = () => {
                   <div className="bg-white rounded-lg p-4 flex flex-col gap-3">
                     <div
                       className={`cursor-pointer rounded border-2 p-1 hover:border-green-600 hover:bg-green-50 ${
-                        paymentmethod == "cash"
+                        paymentmethod == "COD"
                           ? "border-green-600 bg-green-100"
                           : ""
                       }`}
                       onClick={() => {
-                        setPaymentmethod("cash");
+                        setPaymentmethod("COD");
                         setShowPaymentMethod(true);
                       }}
                     >
@@ -208,12 +255,12 @@ const Checkout: React.FC = () => {
                     </div>
                     <div
                       className={`cursor-pointer rounded border-2 p-1 hover:border-green-600 hover:bg-green-50 ${
-                        paymentmethod == "upi"
+                        paymentmethod == "Prepaid"
                           ? "border-green-600 bg-green-100"
                           : ""
                       }`}
                       onClick={() => {
-                        setPaymentmethod("upi");
+                        setPaymentmethod("Prepaid");
                         setShowPaymentMethod(true);
                       }}
                     >
@@ -284,14 +331,12 @@ const Checkout: React.FC = () => {
                     <button
                       className="bg-white text-green-800 py-2 px-4 rounded hover:scale-110"
                       onClick={handlePlaceOrder}
+                      disabled={onProcessing}
                     >
                       Place your order
                     </button>
                     <p className="text-lg font-semibold text-white">
-                      Order Total :
-                      {totalPrice +
-                        Math.round(totalPrice * 0.1) -
-                        totalItems * 5}
+                      Order Total :{Math.round(subtotalPrice + deliveryPrice)}
                     </p>
                   </div>
                 </>
@@ -303,20 +348,23 @@ const Checkout: React.FC = () => {
             <h3 className="font-bold text-2xl justify-center flex">
               Order Summary
             </h3>
-            <p>Items: ₹{totalPrice}</p>
-            <p>Delivery: ₹{Math.round(totalPrice * 0.1)}</p>
-            <p>Promotion Applied: ₹-{totalItems * 5}</p>
+            <p>Items: ₹{subtotalPrice}</p>
+            <p>
+              Delivery:{" "}
+              {deliveryPrice
+                ? `₹${Math.round(deliveryPrice)}`
+                : "Choose Address & paymentmethod"}
+            </p>
             <p className="border-y py-2 border-white text-xl">
-              Order Total: ₹
-              {totalPrice + Math.round(totalPrice * 0.1) - totalItems * 5}
+              Order Total: ₹{Math.round(subtotalPrice + deliveryPrice)}
             </p>
           </div>
         </div>
       </div>
       {addModal && (
         <AddAddressModal
-          setAddModal={setAddModal}
-          refreshDetails={fetchCartAddressDetails}
+          onClose={() => setAddModal(false)}
+          onRefresh={() => fetchCartAddressDetails()}
         />
       )}
     </>

@@ -10,6 +10,11 @@ interface FormData {
   description: string;
   rating: string;
   ratingcount: string;
+  sku: string;
+  weight: string;
+  length: string;
+  breadth: string;
+  height: string;
   images: FileList | null;
   imagePreviews: string[];
 }
@@ -22,6 +27,11 @@ export default function AddProductForm() {
     description: "",
     rating: "",
     ratingcount: "",
+    sku: "",
+    weight: "",
+    length: "",
+    breadth: "",
+    height: "",
     images: null,
     imagePreviews: [],
   });
@@ -65,13 +75,17 @@ export default function AddProductForm() {
     data.append("description", formData.description);
     data.append("rating", formData.rating);
     data.append("ratingcount", formData.ratingcount);
+    data.append("sku", formData.sku);
+    data.append("weight", formData.weight);
+    data.append("length", formData.length);
+    data.append("breadth", formData.breadth);
+    data.append("height", formData.height);
 
     if (formData.images) {
       for (let i = 0; i < formData.images.length; i++) {
         data.append("images", formData.images[i]);
       }
     }
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/products`,
@@ -91,6 +105,11 @@ export default function AddProductForm() {
         description: "",
         rating: "",
         ratingcount: "",
+        sku: "",
+        weight: "",
+        length: "",
+        breadth: "",
+        height: "",
         images: null,
         imagePreviews: [],
       });
@@ -130,13 +149,13 @@ export default function AddProductForm() {
             <input
               type="text"
               name="name"
+              placeholder="name"
               value={formData.name}
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Price
@@ -144,13 +163,13 @@ export default function AddProductForm() {
             <input
               type="number"
               name="price"
+              placeholder="price"
               value={formData.price}
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Description
@@ -164,7 +183,6 @@ export default function AddProductForm() {
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Rating
@@ -181,7 +199,6 @@ export default function AddProductForm() {
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Rating Count
@@ -189,13 +206,88 @@ export default function AddProductForm() {
             <input
               type="number"
               name="ratingcount"
+              placeholder="total people rated"
+              min={0}
               value={formData.ratingcount}
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Sku
+            </label>
+            <input
+              type="text"
+              name="sku"
+              placeholder="stock keeping unit"
+              value={formData.sku}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Weight
+            </label>
+            <input
+              type="number"
+              name="weight"
+              placeholder="in kg"
+              min={0}
+              value={formData.weight}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Length
+            </label>
+            <input
+              type="number"
+              name="length"
+              placeholder="in cm"
+              min={0}
+              value={formData.length}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Breadth
+            </label>
+            <input
+              type="number"
+              name="breadth"
+              placeholder="in cm"
+              min={0}
+              value={formData.breadth}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Height
+            </label>
+            <input
+              type="number"
+              name="height"
+              placeholder="in cm"
+              min={0}
+              value={formData.height}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Product Images

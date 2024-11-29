@@ -9,6 +9,7 @@ const bestsellerRoutes = require("./routes/bestsellerRoutes");
 const carouselRoutes = require("./routes/carouselRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const mailRoutes = require("./routes/mailRoutes");
+const shiprocketRoutes = require("./routes/shiprocketRoutes");
 
 const app = express();
 
@@ -51,12 +52,18 @@ app.use("/bestseller", bestsellerRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/admin", adminRoutes);
 app.use("/mail", mailRoutes);
+app.use("/shiprocket", shiprocketRoutes);
 
 const start = async () => {
   try {
-    await mongoose.connect(CONNECTION);
-
-    console.log("Connected to MongoDB");
+    mongoose
+      .connect(CONNECTION)
+      .then(() => {
+        console.log("Connected to MongoDB successfully!");
+      })
+      .catch((error) => {
+        console.error("Error connecting to MongoDB:", error.message);
+      });
 
     app.listen(PORT, () => {
       console.log(`App listening on port ${PORT}`);
@@ -66,11 +73,15 @@ const start = async () => {
     process.exit(1);
   }
 
-  process.on("SIGINT", () => {
-    mongoose.connection.close(() => {
+  process.on("SIGINT", async () => {
+    try {
+      await mongoose.connection.close();
       console.log("MongoDB disconnected through app termination");
       process.exit(0);
-    });
+    } catch (err) {
+      console.error("Error closing MongoDB connection:", err);
+      process.exit(1);
+    }
   });
 };
 

@@ -72,9 +72,30 @@ async function getOrder(req, res, next) {
 
 async function addOrder(req, res, next) {
   try {
-    const { addressId, paymentmethod, totalPrice, userId } = req.body;
+    const {
+      addressId,
+      paymentmethod,
+      totalPrice,
+      userId,
+      weight,
+      length,
+      breadth,
+      height,
+    } = req.body;
     const d = new Date();
 
+    if (
+      !totalPrice ||
+      !addressId ||
+      !paymentmethod ||
+      !userId ||
+      !weight ||
+      !length ||
+      !breadth ||
+      !height
+    ) {
+      return res.status(400).send("Missing required fields");
+    }
     let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -97,6 +118,10 @@ async function addOrder(req, res, next) {
       products,
       date: d.toDateString(),
       paymentmethod,
+      weight,
+      length,
+      breadth,
+      height,
       totalPrice,
     });
 

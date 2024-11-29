@@ -14,7 +14,7 @@ const userSchema = new Schema({
     required: true,
   },
   phone: {
-    type: String,
+    type: Number,
     validate: {
       validator: function (v) {
         return /\d{10}/.test(v);
