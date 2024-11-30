@@ -6,12 +6,13 @@ const {
   getDeliveryPrice,
   setPayment,
   verifyPayment,
+  createOrderPrepaid,
 } = require("../services/shiprocketService");
 
 router.post("/create-order", createOrder);
+router.post("/create-order-prepaid", createOrderPrepaid);
 router.post("/get-delivery", getDeliveryPrice);
 
 router.post("/create-payment", setPayment);
-router.post("/verify-payment", verifyPayment);
 
 module.exports = router;

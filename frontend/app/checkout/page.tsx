@@ -1,10 +1,14 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import axios from "axios";
+
 import AddAddressModal from "@/components/AddAddressModal";
 import { toast } from "react-toastify";
 import Header from "@/components/Header";
+
+declare var Razorpay: any;
 
 interface CartItem {
   productId: string;
@@ -39,20 +43,23 @@ const Checkout: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchCartAddressDetails = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await fetch(
+      const addressResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`
       );
-      const response = await fetch(
+      const cartResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
       );
-      const address = await data.json();
-      const cart = await response.json();
+
+      const address = await addressResponse.json();
+      const cart = await cartResponse.json();
 
       setUserAddress(address);
       setCartItems(cart);
     } catch (error) {
-      console.error("Error fetching user cart:", error);
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load address or cart data.");
     } finally {
       setLoading(false);
     }
@@ -83,6 +90,10 @@ const Checkout: React.FC = () => {
     try {
       if (!userId || !addressId) {
         throw new Error("Missing userId or addressId for delivery calculation");
+      }
+      if (!COD || !["COD", "Prepaid"].includes(COD)) {
+        toast.error("Invalid payment method.");
+        return;
       }
 
       const response = await axios.post(
@@ -127,9 +138,85 @@ const Checkout: React.FC = () => {
     0
   );
 
+  const handlePayment = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/create-payment`,
+        {
+          amount: `${Math.round(subtotalPrice + deliveryPrice)}`,
+          email: "aravindsiva1509@gmail.com",
+        }
+      );
+      const { order_id } = response.data;
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        order_id: order_id,
+        handler: async function (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) {
+          alert(
+            `Payment successful. Payment ID: ${response.razorpay_payment_id}`
+          );
+          try {
+            const orderRes = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/create-order-prepaid`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  order_id,
+                  userId,
+                  addressId,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (!orderRes.ok) {
+              throw new Error("Error placing the order");
+            }
+
+            await orderRes.json();
+            setOnProcessing(false);
+            router.push("/orders");
+          } catch (error) {
+            toast.error("Error during payment process");
+            console.error("Error creating payment:", error);
+
+            setOnProcessing(false);
+          }
+        },
+        prefill: {
+          email: "aravindsiva1509@gmail.com",
+        },
+        theme: { color: "#F37254" },
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error creating payment:", error.response?.data);
+      } else {
+        console.error("Unexpected error:", (error as Error).message);
+      }
+    }
+  };
+
   const handlePlaceOrder = async () => {
     try {
       setOnProcessing(true);
+      if (paymentmethod === "Prepaid") {
+        handlePayment();
+        return;
+      }
       const orderRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/create-order`,
         {
@@ -164,8 +251,13 @@ const Checkout: React.FC = () => {
       setOnProcessing(false);
     }
   };
+
   return (
     <>
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+      />
       <Header title="Checkout" />
       <div className="flex flex-col justify-center items-center">
         <div className="w-full flex flex-col items-center md:items-start md:flex-row p-3">
@@ -334,6 +426,7 @@ const Checkout: React.FC = () => {
                     >
                       Place your order
                     </button>
+
                     <p className="text-lg font-semibold text-white">
                       Order Total :{Math.round(subtotalPrice + deliveryPrice)}
                     </p>

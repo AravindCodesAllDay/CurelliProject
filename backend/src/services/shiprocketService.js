@@ -1,6 +1,7 @@
 const Orders = require("../models/orderModel");
 const User = require("../models/userModel");
 const axios = require("axios");
+const crypto = require("crypto");
 const Razorpay = require("razorpay");
 
 require("dotenv").config();
@@ -65,9 +66,9 @@ const razorpay = new Razorpay({
 
 async function setPayment(req, res) {
   try {
-    const { amount, email, contact } = req.body;
+    const { amount, email } = req.body;
 
-    if (!amount || !email || !contact) {
+    if (!amount || !email) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -76,7 +77,7 @@ async function setPayment(req, res) {
       currency: "INR",
       receipt: `order_rcptid_${Date.now()}`,
       payment_capture: 1,
-      notes: { email, contact },
+      notes: { email },
     };
 
     const order = await razorpay.orders.create(options);
@@ -98,17 +99,21 @@ async function setPayment(req, res) {
   }
 }
 
-async function verifyPayment(req, res) {
-  const { payment_id, order_id, signature } = req.body;
-  const expectedSignature = crypto
-    .createHmac("sha256", "your_secret")
-    .update(order_id + "|" + payment_id)
-    .digest("hex");
+async function verifyPayment(payment_id, order_id, signature) {
+  try {
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${order_id}|${payment_id}`)
+      .digest("hex");
 
-  if (signature === expectedSignature) {
-    res.status(200).json({ message: "Payment verified successfully!" });
-  } else {
-    res.status(400).json({ message: "Invalid signature!" });
+    if (signature === expectedSignature) {
+      return { verified: true, message: "Payment verified successfully!" };
+    } else {
+      return { verified: false, message: "Invalid signature!" };
+    }
+  } catch (error) {
+    console.error("Error in verifyPayment:", error.message);
+    return { verified: false, message: error.message };
   }
 }
 
@@ -357,4 +362,164 @@ async function createOrder(req, res) {
   }
 }
 
-module.exports = { createOrder, getDeliveryPrice, setPayment, verifyPayment };
+async function createOrderPrepaid(req, res) {
+  try {
+    const {
+      addressId,
+      userId,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+    } = req.body;
+    if (
+      !addressId ||
+      !userId ||
+      !razorpay_payment_id ||
+      !razorpay_order_id ||
+      !razorpay_signature
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const verificationResult = await verifyPayment(
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature
+    );
+    if (!verificationResult.verified) {
+      return res.status(400).json({ message: verificationResult.message });
+    }
+
+    const user = await User.findById(userId).populate("cart.productId");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const address = user.address.id(addressId);
+    if (!address) return res.status(404).json({ message: "Address not found" });
+
+    if (!user.cart.length)
+      return res.status(400).json({ message: "Cart is empty" });
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    };
+    const primaryAddress = await getPrimaryAddress();
+    const dimensions = calculateDimensionsAndWeight(user.cart);
+    const subtotalPrice = user.cart.reduce(
+      (total, item) => total + item.productId.price * item.quantity,
+      0
+    );
+
+    const deliveryPrice = await calculateDeliveryPrice({
+      pickup_postcode: primaryAddress.pin_code,
+      delivery_postcode: address.pincode,
+      weight: dimensions.totalWeight,
+      cod: 0,
+      dimensions,
+    });
+
+    const totalPrice = subtotalPrice + deliveryPrice;
+
+    const newOrder = new Orders({
+      userId,
+      address,
+      products: user.cart,
+      date: new Date().toDateString(),
+      paymentmethod: "Prepaid",
+      deliveryPrice,
+      totalPrice,
+      length: dimensions.maxLength,
+      breadth: dimensions.maxBreadth,
+      height: dimensions.totalHeight,
+      weight: dimensions.totalWeight,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+    });
+
+    const shiprocketOrder = {
+      order_id: newOrder._id.toString(),
+      order_date: formatDate(new Date()),
+      pickup_location: "Primary",
+      channel_id: "",
+      company_name: "Curelli",
+      billing_customer_name: user.name,
+      billing_last_name: "Bot",
+      billing_address: address.address,
+      billing_address_2: "",
+      billing_city: address.district,
+      billing_pincode: address.pincode.toString(),
+      billing_state: address.state,
+      billing_country: address.country || "India",
+      billing_email: user.mail,
+      billing_phone: user.phone?.toString() || "",
+      shipping_is_billing: true,
+      order_items: user.cart.map((item) => ({
+        name: item.productId.name,
+        sku: item.productId.sku || "default_sku",
+        units: item.quantity || 1,
+        selling_price: item.productId.price || 0,
+        discount: "",
+        tax: "",
+        hsn: item.productId.hsn || 441122,
+      })),
+      payment_method: "Prepaid",
+      shipping_charges: deliveryPrice,
+      giftwrap_charges: 0,
+      transaction_charges: 0,
+      total_discount: 0,
+      sub_total: subtotalPrice,
+      length: dimensions.maxLength,
+      breadth: dimensions.maxBreadth,
+      height: dimensions.totalHeight,
+      weight: dimensions.totalWeight,
+    };
+
+    const shiprocketResponse = await axios.post(
+      `${BASE_URL}/orders/create/adhoc`,
+      shiprocketOrder,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!shiprocketResponse.data || shiprocketResponse.data.status_code !== 1) {
+      console.error("Shiprocket Response Error:", shiprocketResponse.data);
+      return res.status(500).json({
+        message: "Failed to create order in Shiprocket",
+        error:
+          shiprocketResponse.data?.packaging_box_error ||
+          shiprocketResponse.data?.message ||
+          "Unexpected error occurred",
+      });
+    }
+
+    newOrder.shiprocketId = shiprocketResponse.data.order_id;
+
+    user.cart = [];
+    user.markModified("cart");
+    user.orders.push(newOrder._id);
+
+    await newOrder.save();
+    await user.save();
+
+    res.status(200).json({
+      message: "Order placed successfully",
+      order: { id: newOrder._id, totalPrice, deliveryPrice },
+    });
+  } catch (error) {
+    console.error("Error in createOrder:", error.message);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+}
+
+module.exports = {
+  createOrder,
+  createOrderPrepaid,
+  getDeliveryPrice,
+  setPayment,
+};

@@ -33,6 +33,24 @@ const orderSchema = new mongoose.Schema(
       enum: ["COD", "Prepaid"],
       required: true,
     },
+    razorpay_payment_id: {
+      type: String,
+      required: function () {
+        return this.paymentmethod === "Prepaid";
+      },
+    },
+    razorpay_order_id: {
+      type: String,
+      required: function () {
+        return this.paymentmethod === "Prepaid";
+      },
+    },
+    razorpay_signature: {
+      type: String,
+      required: function () {
+        return this.paymentmethod === "Prepaid";
+      },
+    },
     deliveryPrice: {
       type: Number,
       required: true,
