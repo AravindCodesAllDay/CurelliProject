@@ -140,7 +140,6 @@ const Checkout: React.FC = () => {
           body: JSON.stringify({
             userId,
             addressId,
-            paymentmethod,
           }),
         }
       );

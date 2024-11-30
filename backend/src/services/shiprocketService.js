@@ -1,13 +1,16 @@
-const axios = require("axios");
 const Orders = require("../models/orderModel");
 const User = require("../models/userModel");
+const axios = require("axios");
+const Razorpay = require("razorpay");
+
 require("dotenv").config();
 
-// Environment variable validation
 const requiredEnvVars = [
   "SHIPROCKET_BASE_URL",
   "SHIPROCKET_EMAIL",
   "SHIPROCKET_PASSWORD",
+  "RAZORPAY_KEY_ID",
+  "RAZORPAY_KEY_SECRET",
 ];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
@@ -55,7 +58,60 @@ async function authenticate() {
   }
 }
 
-// Helper function to fetch the primary pickup address
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+async function setPayment(req, res) {
+  try {
+    const { amount, email, contact } = req.body;
+
+    if (!amount || !email || !contact) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const options = {
+      amount: parseInt(amount) * 100,
+      currency: "INR",
+      receipt: `order_rcptid_${Date.now()}`,
+      payment_capture: 1,
+      notes: { email, contact },
+    };
+
+    const order = await razorpay.orders.create(options);
+    console.log(order);
+    res.status(200).json({
+      message: "Payment Process initiated",
+      order_id: order.id,
+    });
+  } catch (error) {
+    console.error(
+      "Error in setPayment:",
+      error.response?.data || error.message
+    );
+
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.response?.data || error.message,
+    });
+  }
+}
+
+async function verifyPayment(req, res) {
+  const { payment_id, order_id, signature } = req.body;
+  const expectedSignature = crypto
+    .createHmac("sha256", "your_secret")
+    .update(order_id + "|" + payment_id)
+    .digest("hex");
+
+  if (signature === expectedSignature) {
+    res.status(200).json({ message: "Payment verified successfully!" });
+  } else {
+    res.status(400).json({ message: "Invalid signature!" });
+  }
+}
+
 async function getPrimaryAddress() {
   try {
     if (!token) token = await authenticate();
@@ -81,7 +137,6 @@ async function getPrimaryAddress() {
   }
 }
 
-// Calculate dimensions and weight for the cart
 function calculateDimensionsAndWeight(cart) {
   return cart.reduce(
     (dimensions, item) => {
@@ -103,7 +158,6 @@ function calculateDimensionsAndWeight(cart) {
   );
 }
 
-// Fetch delivery price from Shiprocket
 async function calculateDeliveryPrice({
   pickup_postcode,
   delivery_postcode,
@@ -137,7 +191,6 @@ async function calculateDeliveryPrice({
   }
 }
 
-// Controller to get the delivery price
 async function getDeliveryPrice(req, res) {
   try {
     const { userId, addressId, COD } = req.body;
@@ -173,11 +226,10 @@ async function getDeliveryPrice(req, res) {
   }
 }
 
-// Controller to create an order
 async function createOrder(req, res) {
   try {
-    const { addressId, paymentmethod, userId } = req.body;
-    if (!addressId || !paymentmethod || !userId) {
+    const { addressId, userId } = req.body;
+    if (!addressId || !userId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -209,7 +261,7 @@ async function createOrder(req, res) {
       pickup_postcode: primaryAddress.pin_code,
       delivery_postcode: address.pincode,
       weight: dimensions.totalWeight,
-      cod: paymentmethod.toLowerCase() === "cod" ? 1 : 0,
+      cod: 1,
       dimensions,
     });
 
@@ -220,7 +272,7 @@ async function createOrder(req, res) {
       address,
       products: user.cart,
       date: new Date().toDateString(),
-      paymentmethod,
+      paymentmethod: "COD",
       deliveryPrice,
       totalPrice,
       length: dimensions.maxLength,
@@ -255,7 +307,7 @@ async function createOrder(req, res) {
         tax: "",
         hsn: item.productId.hsn || 441122,
       })),
-      payment_method: paymentmethod.toLowerCase() === "cod" ? "COD" : "Prepaid",
+      payment_method: "COD",
       shipping_charges: deliveryPrice,
       giftwrap_charges: 0,
       transaction_charges: 0,
@@ -305,4 +357,4 @@ async function createOrder(req, res) {
   }
 }
 
-module.exports = { createOrder, getDeliveryPrice };
+module.exports = { createOrder, getDeliveryPrice, setPayment, verifyPayment };

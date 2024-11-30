@@ -141,8 +141,8 @@ export default function Address() {
           </div>
           {addModal && (
             <AddAddressModal
-              setAddModal={setAddModal}
-              refreshDetails={fetchDetails}
+              onClose={() => setAddModal(false)}
+              onRefresh={() => fetchDetails()}
             />
           )}
           <div className="px-4 py-2">
