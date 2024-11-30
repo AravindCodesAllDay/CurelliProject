@@ -11,10 +11,10 @@ import { toast } from "react-toastify";
 import { FaEye } from "react-icons/fa";
 
 import google from "@/assets/google.png";
+
 export default function Registerform() {
   const router = useRouter();
 
-  // State variables
   const [name, setName] = useState<string>("");
   const [mail, setMail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
@@ -36,6 +36,16 @@ export default function Registerform() {
       try {
         setLoading(true);
 
+        const checkResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/users/${mail}`
+        );
+
+        if (checkResponse.ok) {
+          toast.error("User already exists. Please login.");
+          router.push("/login");
+          return;
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/users/register`,
           {
@@ -48,10 +58,11 @@ export default function Registerform() {
         );
 
         if (!response.ok) {
-          toast.error("registration failed");
+          toast.error("Registration failed. Please try again.");
           return;
         }
-        toast.success("user Creatred");
+
+        toast.success("User created successfully.");
         router.push("/login");
       } catch (error) {
         console.error("Error during registration:", (error as Error).message);
@@ -83,37 +94,37 @@ export default function Registerform() {
           }
         )
         .then(async (res) => {
-          const response = await fetch(
+          const checkResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/users/${res.data.email}`
           );
-          if (response.ok) {
-            const data = await response.json();
+
+          if (checkResponse.ok) {
+            toast.error("User already exists. Please login.");
+            router.push("/login");
+            return;
+          }
+
+          const result = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/users/google`,
+            {
+              method: "POST",
+              headers: {
+                "Content-type": "application/json",
+              },
+              body: JSON.stringify({
+                mail: res.data.email,
+                name: res.data.name,
+              }),
+            }
+          );
+          if (result.ok) {
+            const data = await result.json();
             localStorage.setItem("id", data._id);
             localStorage.setItem("name", data.name);
             router.push("/");
-          } else {
-            const result = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/users/google`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-type": "application/json",
-                },
-                body: JSON.stringify({
-                  mail: res.data.email,
-                  name: res.data.name,
-                }),
-              }
-            );
-            if (result.ok) {
-              const data = await result.json();
-              localStorage.setItem("id", data._id);
-              localStorage.setItem("name", data.name);
-              router.push("/");
-            }
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
         .finally(() => setLoading(false));
     }
 
@@ -146,6 +157,7 @@ export default function Registerform() {
         break;
     }
   };
+
   return (
     <div className="h-100% flex justify-center items-center bg-gray-100 xs:p-3 sm:p-4 md:p-5 lg:p-12 xl:p-12 2xl:p-14">
       <div className="bg-white rounded-md shadow-lg w-[440px] xs:p-4 sm:p-8 md:p-10 lg:p-12 xl:p-12 2xl:p-14">

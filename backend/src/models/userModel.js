@@ -12,6 +12,7 @@ const userSchema = new Schema({
   mail: {
     type: String,
     required: true,
+    unique: true,
   },
   phone: {
     type: Number,
@@ -22,8 +23,21 @@ const userSchema = new Schema({
       message: (props) => `${props.value} is not a valid phone number!`,
     },
   },
+  isgoogle: {
+    type: Boolean,
+    required: true,
+  },
   pswd: {
     type: String,
+    validate: {
+      validator: function (value) {
+        if (!this.isgoogle && (!value || value.trim() === "")) {
+          return false;
+        }
+        return true;
+      },
+      message: "Password is required if Google login is not used.",
+    },
   },
   gender: {
     type: String,

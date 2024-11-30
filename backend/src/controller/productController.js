@@ -41,6 +41,7 @@ exports.addProduct = async (req, res) => {
       rating,
       ratingcount,
       sku,
+      hsn,
       weight,
       length,
       breadth,
@@ -54,6 +55,7 @@ exports.addProduct = async (req, res) => {
       !rating ||
       !ratingcount ||
       !sku ||
+      !hsn ||
       !weight ||
       !length ||
       !breadth ||
@@ -95,6 +97,7 @@ exports.addProduct = async (req, res) => {
       rating,
       ratingcount,
       sku,
+      hsn,
       weight,
       length,
       breadth,
@@ -121,6 +124,7 @@ exports.editProduct = async (req, res) => {
       rating,
       ratingcount,
       sku,
+      hsn,
       weight,
       length,
       breadth,
@@ -135,6 +139,7 @@ exports.editProduct = async (req, res) => {
       !rating?.trim() ||
       !ratingcount?.trim() ||
       !sku?.trim() ||
+      !hsn?.trim() ||
       !weight?.trim() ||
       !length?.trim() ||
       !breadth?.trim() ||
@@ -177,6 +182,7 @@ exports.editProduct = async (req, res) => {
       rating,
       ratingcount,
       sku,
+      hsn,
       weight,
       length,
       breadth,

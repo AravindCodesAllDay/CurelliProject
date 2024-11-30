@@ -34,6 +34,14 @@ export default function Loginform() {
         }
       );
 
+      if (response.status === 403) {
+        toast.error(
+          "This account uses Google login. Please sign in with Google.",
+          { position: "top-center" }
+        );
+        throw new Error("Google login required.");
+      }
+
       if (response.status === 401) {
         setWrongPswd(true);
         throw new Error("Incorrect password or email.");

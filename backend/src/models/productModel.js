@@ -18,6 +18,16 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  hsn: {
+    type: Number,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return /\d{8}/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid phone number!`,
+    },
+  },
   description: {
     type: String,
     required: true,

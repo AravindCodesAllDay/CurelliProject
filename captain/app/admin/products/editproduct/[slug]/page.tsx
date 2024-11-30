@@ -12,6 +12,7 @@ interface FormData {
   rating: string;
   ratingcount: string;
   sku: string;
+  hsn: string;
   weight: string;
   length: string;
   breadth: string;
@@ -30,6 +31,7 @@ interface ProductDetails {
   ratingcount: number;
   price: number;
   sku: string;
+  hsn: number;
   weight: number;
   length: number;
   breadth: number;
@@ -52,6 +54,7 @@ export default function UpdateProductForm({
     ratingcount: "",
     status: "",
     sku: "",
+    hsn: "",
     weight: "",
     length: "",
     breadth: "",
@@ -78,6 +81,7 @@ export default function UpdateProductForm({
           rating: productData.rating?.toString() || "",
           ratingcount: productData.ratingcount?.toString() || "",
           sku: productData.sku?.toString() || "",
+          hsn: productData.hsn?.toString() || "",
           weight: productData.weight?.toString() || "",
           length: productData.length?.toString() || "",
           breadth: productData.breadth?.toString() || "",
@@ -133,6 +137,7 @@ export default function UpdateProductForm({
     data.append("ratingcount", formData.ratingcount);
     data.append("status", formData.status);
     data.append("sku", formData.sku);
+    data.append("hsn", formData.hsn);
     data.append("weight", formData.weight);
     data.append("length", formData.length);
     data.append("breadth", formData.breadth);
@@ -284,6 +289,20 @@ export default function UpdateProductForm({
               name="sku"
               placeholder="stock keeping unit"
               value={formData.sku}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Hsn
+            </label>
+            <input
+              type="text"
+              name="hsn"
+              placeholder="Harmonized System of Nomenclature"
+              value={formData.hsn}
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"

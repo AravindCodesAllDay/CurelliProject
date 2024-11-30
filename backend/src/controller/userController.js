@@ -41,7 +41,7 @@ exports.googleLogin = async (req, res) => {
     if (user) {
       return res.status(200).json(user);
     }
-    user = await User.create({ name, mail });
+    user = await User.create({ name, mail, isgoogle: false });
     return res.status(201).json(user);
   } catch (error) {
     console.error(error.message);
@@ -52,20 +52,30 @@ exports.googleLogin = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { pswd, mail } = req.body;
+
     if (!pswd || !mail) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
+
     const user = await User.findOne({ mail });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found." });
     }
+
+    if (user.isgoogle) {
+      return res.status(403).json({
+        message: "This account uses Google login. Please sign in with Google.",
+      });
+    }
+
     const passwordsMatch = await bcrypt.compare(pswd, user.pswd);
     if (!passwordsMatch) {
-      return res.status(400).json({ message: "Password doesn't match" });
+      return res.status(400).json({ message: "Password doesn't match." });
     }
-    return res.status(200).json(user); // 200 for successful login
+
+    return res.status(200).json(user);
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -75,22 +85,38 @@ exports.login = async (req, res) => {
 exports.register = async (req, res) => {
   try {
     const { name, mail, phone, pswd } = req.body;
+
     if (!name || !mail || !phone || !pswd) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(mail)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
+
+    const existingUser = await User.findOne({ mail });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email is already in use." }); // 409 Conflict
+    }
+
     const hashedPassword = await bcrypt.hash(pswd, 10);
-    const newUser = { name, mail, phone, pswd: hashedPassword };
+
+    const newUser = {
+      name,
+      mail,
+      phone,
+      isgoogle: false,
+      pswd: hashedPassword,
+    };
     const user = await User.create(newUser);
+
     return res.status(201).json(user);
   } catch (error) {
     console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" }); // 500 Internal Server Error
   }
 };
 
