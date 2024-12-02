@@ -75,12 +75,12 @@ export default function Products() {
 
       if (listResponse.status === 409) {
         toast.info(`Item already in ${path}`, {
-          closeButton: false,
+          closeButton: true,
           pauseOnHover: true,
         });
       } else if (listResponse.ok) {
         toast.success(`Item added to ${path}`, {
-          closeButton: false,
+          closeButton: true,
           pauseOnHover: true,
         });
       } else {
@@ -89,7 +89,7 @@ export default function Products() {
       }
     } catch (error) {
       toast.error(`Failed to add item to ${path}`, {
-        closeButton: false,
+        closeButton: true,
         pauseOnHover: true,
       });
     }

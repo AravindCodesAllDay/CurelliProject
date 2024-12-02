@@ -73,7 +73,8 @@ async function setPayment(req, res) {
     }
 
     const options = {
-      amount: parseInt(amount) * 100,
+      // amount: parseInt(amount) * 100,
+      amount: 100,
       currency: "INR",
       receipt: `order_rcptid_${Date.now()}`,
       payment_capture: 1,
@@ -81,7 +82,7 @@ async function setPayment(req, res) {
     };
 
     const order = await razorpay.orders.create(options);
-    console.log(order);
+
     res.status(200).json({
       message: "Payment Process initiated",
       order_id: order.id,
@@ -270,8 +271,6 @@ async function createOrder(req, res) {
       dimensions,
     });
 
-    const totalPrice = subtotalPrice + deliveryPrice;
-
     const newOrder = new Orders({
       userId,
       address,
@@ -279,7 +278,7 @@ async function createOrder(req, res) {
       date: new Date().toDateString(),
       paymentmethod: "COD",
       deliveryPrice,
-      totalPrice,
+      subtotalPrice,
       length: dimensions.maxLength,
       breadth: dimensions.maxBreadth,
       height: dimensions.totalHeight,
@@ -293,7 +292,7 @@ async function createOrder(req, res) {
       channel_id: "",
       company_name: "Curelli",
       billing_customer_name: user.name,
-      billing_last_name: "Bot",
+      billing_last_name: "",
       billing_address: address.address,
       billing_address_2: "",
       billing_city: address.district,
@@ -352,7 +351,7 @@ async function createOrder(req, res) {
 
     res.status(200).json({
       message: "Order placed successfully",
-      order: { id: newOrder._id, totalPrice, deliveryPrice },
+      order: { id: newOrder._id, subtotalPrice, deliveryPrice },
     });
   } catch (error) {
     console.error("Error in createOrder:", error.message);
@@ -422,8 +421,6 @@ async function createOrderPrepaid(req, res) {
       dimensions,
     });
 
-    const totalPrice = subtotalPrice + deliveryPrice;
-
     const newOrder = new Orders({
       userId,
       address,
@@ -431,7 +428,7 @@ async function createOrderPrepaid(req, res) {
       date: new Date().toDateString(),
       paymentmethod: "Prepaid",
       deliveryPrice,
-      totalPrice,
+      subtotalPrice,
       length: dimensions.maxLength,
       breadth: dimensions.maxBreadth,
       height: dimensions.totalHeight,
@@ -448,7 +445,7 @@ async function createOrderPrepaid(req, res) {
       channel_id: "",
       company_name: "Curelli",
       billing_customer_name: user.name,
-      billing_last_name: "Bot",
+      billing_last_name: "",
       billing_address: address.address,
       billing_address_2: "",
       billing_city: address.district,
@@ -507,7 +504,7 @@ async function createOrderPrepaid(req, res) {
 
     res.status(200).json({
       message: "Order placed successfully",
-      order: { id: newOrder._id, totalPrice, deliveryPrice },
+      order: { id: newOrder._id, subtotalPrice, deliveryPrice },
     });
   } catch (error) {
     console.error("Error in createOrder:", error.message);
@@ -517,9 +514,152 @@ async function createOrderPrepaid(req, res) {
   }
 }
 
+async function getOrder(req, res, next) {
+  try {
+    const { userId, orderId } = req.params;
+
+    if (!userId || !orderId) {
+      return res
+        .status(400)
+        .json({ message: "Invalid format or missing parameters." });
+    }
+
+    const user = await User.findOne({ _id: userId, orders: orderId });
+    if (!user) {
+      return res.status(404).json({ message: "User or order not found." });
+    }
+
+    const order = await Orders.findById(orderId)
+      .populate({
+        path: "products.productId",
+        model: "Product",
+      })
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    const transformedOrder = {
+      ...order,
+      products: order.products.map((item) => ({
+        ...item.productId,
+        quantity: item.quantity,
+      })),
+    };
+
+    if (!token) {
+      token = await authenticate();
+    }
+
+    const { status, trackingData } = await fetchShiprocketOrderAndTracking(
+      order.shiprocketId
+    );
+
+    return res.status(200).json({
+      order: transformedOrder,
+      status,
+      trackingData,
+    });
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.log("Token expired, re-authenticating...");
+      token = await authenticate();
+      return getOrder(req, res, next);
+    }
+
+    console.error("Error in getOrder:", error.message);
+    return res.status(500).json({ message: "An unexpected error occurred." });
+  }
+}
+
+async function fetchShiprocketOrderAndTracking(shiprocketId) {
+  try {
+    const orderResponse = await axios.get(
+      `${BASE_URL}/orders/show/${shiprocketId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const orderData = orderResponse.data.data;
+    const status = orderData.status;
+
+    const deliveryDate =
+      orderData.expected_delivery_date || orderData.delivered_at || null;
+
+    const trackingResponse = await axios.get(`${BASE_URL}/courier/track`, {
+      params: {
+        order_id: shiprocketId,
+      },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const trackingData = trackingResponse.data;
+
+    return { status, trackingData, deliveryDate };
+  } catch (error) {
+    console.error(
+      "Error fetching product status, tracking data, or delivery date from Shiprocket:",
+      error.message
+    );
+    throw error;
+  }
+}
+
+async function cancelOrder(req, res) {
+  try {
+    const { userId, orderId } = req.params;
+
+    if (!userId || !orderId) {
+      return res
+        .status(400)
+        .json({ message: "Invalid format or missing parameters." });
+    }
+
+    const order = await Orders.findOne({ _id: orderId, userId });
+    if (!order) {
+      return res
+        .status(404)
+        .json({ message: "Order not found or does not belong to this user." });
+    }
+
+    if (!token) {
+      token = await authenticate();
+    }
+
+    const response = await axios.post(
+      `${BASE_URL}/orders/cancel`,
+      {},
+      {
+        params: { ids: [order.shiprocketId] },
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return res.status(200).json({
+      message: "Order cancelled successfully.",
+      shiprocketResponse: response.data,
+    });
+  } catch (error) {
+    if (error.response?.status === 401) {
+      console.log("Token expired, re-authenticating...");
+      token = await authenticate();
+      return router.handle(req, res);
+    }
+
+    console.error("Error cancelling Shiprocket order:", error.message);
+    return res
+      .status(500)
+      .json({ message: "An unexpected error occurred.", error: error.message });
+  }
+}
+
 module.exports = {
   createOrder,
   createOrderPrepaid,
   getDeliveryPrice,
   setPayment,
+  getOrder,
+  cancelOrder,
 };

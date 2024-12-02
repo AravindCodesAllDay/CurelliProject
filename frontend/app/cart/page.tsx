@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import { toast } from "react-toastify";
 import { FaShareAlt, FaTrash } from "react-icons/fa";
 import Link from "next/link";
@@ -117,100 +116,89 @@ const Cart: React.FC = () => {
     0
   );
 
-  return (
-    <>
-      <Header title={"Cart"} />
-      {cartItems.length > 0 ? (
-        <div className="container mx-auto p-2">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cartItems.map((item) => (
-                <tr key={item.productId} className="border-b">
-                  <td className="flex justify-center p-2">
-                    <img
-                      src={item.photos[0]}
-                      alt={item.name}
-                      className="w-24 h-24 object-contain"
-                    />
-                  </td>
-                  <td className="p-2 text-center">{item.name}</td>
-                  <td className="p-2">
-                    <div className="flex justify-center items-center">
-                      <button
-                        className="size-6 rounded-full bg-gray-200 flex items-center justify-center mr-2 font-bold text-lg"
-                        onClick={() =>
-                          handleQuantityChange(item.productId, "-")
-                        }
-                        aria-label={`Decrease quantity of ${item.name}`}
-                      >
-                        -
-                      </button>
-                      <span className="font-bold text-xl">{item.quantity}</span>
-                      <button
-                        className="size-6 rounded-full bg-gray-200 flex items-center justify-center ml-2 font-bold text-lg"
-                        onClick={() =>
-                          handleQuantityChange(item.productId, "+")
-                        }
-                        aria-label={`Increase quantity of ${item.name}`}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </td>
-                  <td className="p-2 text-center">
-                    ₹{item.price * item.quantity}
-                  </td>
-                  <td className="p-2">
-                    <div className="flex justify-center items-center space-x-4">
-                      <FaTrash
-                        className="w-5 h-5 text-red-800 cursor-pointer"
-                        onClick={() => handleDelete(item.productId)}
-                        aria-label={`Delete ${item.name} from cart`}
-                      />
-                      <FaShareAlt className="w-5 h-5 text-black cursor-pointer" />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="border p-4 mt-4">
-            <h2 className="text-lg font-bold text-center">
-              Subtotal ({totalItems} Item{totalItems > 1 ? "s" : ""}) : ₹
-              {totalPrice}
-            </h2>
-            <hr className="my-2" />
-            <div className="text-center mt-4">
-              <button
-                className="bg-[#40773b] hover:bg-green-600 transition-colors ease-out duration-150 text-white px-4 py-2 rounded-md"
-                onClick={() => router.push("/checkout")}
-              >
-                Proceed to Checkout
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-3 mx-auto p-2">
-          <p>No items in cart</p>
-          <Link
-            href={"/shop"}
+  return cartItems.length > 0 ? (
+    <div className="container mx-auto p-2">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cartItems.map((item) => (
+            <tr key={item.productId} className="border-b">
+              <td className="flex justify-center p-2">
+                <img
+                  src={item.photos[0]}
+                  alt={item.name}
+                  className="w-24 h-24 object-contain"
+                />
+              </td>
+              <td className="p-2 text-center">{item.name}</td>
+              <td className="p-2">
+                <div className="flex justify-center items-center">
+                  <button
+                    className="size-6 rounded-full bg-gray-200 flex items-center justify-center mr-2 font-bold text-lg"
+                    onClick={() => handleQuantityChange(item.productId, "-")}
+                    aria-label={`Decrease quantity of ${item.name}`}
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-xl">{item.quantity}</span>
+                  <button
+                    className="size-6 rounded-full bg-gray-200 flex items-center justify-center ml-2 font-bold text-lg"
+                    onClick={() => handleQuantityChange(item.productId, "+")}
+                    aria-label={`Increase quantity of ${item.name}`}
+                  >
+                    +
+                  </button>
+                </div>
+              </td>
+              <td className="p-2 text-center">₹{item.price * item.quantity}</td>
+              <td className="p-2">
+                <div className="flex justify-center items-center space-x-4">
+                  <FaTrash
+                    className="w-5 h-5 text-red-800 cursor-pointer"
+                    onClick={() => handleDelete(item.productId)}
+                    aria-label={`Delete ${item.name} from cart`}
+                  />
+                  <FaShareAlt className="w-5 h-5 text-black cursor-pointer" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="border p-4 mt-4">
+        <h2 className="text-lg font-bold text-center">
+          Subtotal ({totalItems} Item{totalItems > 1 ? "s" : ""}) : ₹
+          {totalPrice}
+        </h2>
+        <hr className="my-2" />
+        <div className="text-center mt-4">
+          <button
             className="bg-[#40773b] hover:bg-green-600 transition-colors ease-out duration-150 text-white px-4 py-2 rounded-md"
+            onClick={() => router.push("/checkout")}
           >
-            Browse Products
-          </Link>
+            Proceed to Checkout
+          </button>
         </div>
-      )}
-    </>
+      </div>
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-3 mx-auto p-2">
+      <p>No items in cart</p>
+      <Link
+        href={"/shop"}
+        className="bg-[#40773b] hover:bg-green-600 transition-colors ease-out duration-150 text-white px-4 py-2 rounded-md"
+      >
+        Browse Products
+      </Link>
+    </div>
   );
 };
 

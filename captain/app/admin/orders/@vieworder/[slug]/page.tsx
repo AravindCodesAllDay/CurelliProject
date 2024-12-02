@@ -3,15 +3,15 @@ import Modal from "@/components/Modal";
 import { useState, useEffect } from "react";
 
 interface Product {
-  productId: {
-    photos: string[];
-    name: string;
-    description: string;
-    price: number;
-    rating: number;
-    ratingcount: number;
-    status: string;
-  };
+  productId: string;
+  photos: string[];
+  name: string;
+  description: string;
+  price: number;
+  rating: number;
+  ratingcount: number;
+  status: string;
+
   quantity: number;
 }
 
@@ -19,7 +19,8 @@ interface Order {
   _id: string;
   date: string;
   products: Product[];
-  totalPrice: number;
+  subtotalPrice: number;
+  deliveryPrice: number;
   paymentmethod: string;
   address: {
     address: string;
@@ -36,7 +37,6 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [order, setOrder] = useState<Order>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchDetails = async () => {
     try {
@@ -62,33 +62,6 @@ export default function Page({ params }: { params: { slug: string } }) {
   useEffect(() => {
     fetchDetails();
   }, []);
-
-  const updateOrderStatus = async (orderId: string, status: string) => {
-    try {
-      setUpdatingStatus(true);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status }),
-        }
-      );
-      if (!res.ok) {
-        throw new Error("Failed to update order status");
-      }
-      await fetchDetails();
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      setError(
-        error instanceof Error ? error.message : "An unknown error occurred"
-      );
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -152,14 +125,12 @@ export default function Page({ params }: { params: { slug: string } }) {
                   <tr key={index} className="border-b">
                     <td className="py-2">
                       <img
-                        src={product.productId.photos[0]}
-                        alt={product.productId.name}
+                        src={product.photos[0]}
+                        alt={product.name}
                         className="h-14 mx-auto"
                       />
                     </td>
-                    <td className="py-2 text-center">
-                      {product.productId.name}
-                    </td>
+                    <td className="py-2 text-center">{product.name}</td>
                     <td className="py-2 text-center">{product.quantity}</td>
                   </tr>
                 ))}
@@ -167,21 +138,10 @@ export default function Page({ params }: { params: { slug: string } }) {
             </table>
 
             <div className="flex text-lg p-4 border-t-2 border-green-800">
-              <p> Total Price: {order.totalPrice}</p>
-              <div className="ml-auto">
-                <span className="font-semibold">Order Status: </span>
-                <select
-                  id="status-dropdown"
-                  className="border rounded-lg px-2 py-1"
-                  value={order.orderStatus}
-                  onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                  disabled={updatingStatus}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
+              <p>
+                Total Price:{" "}
+                {Math.round(order.subtotalPrice + order.deliveryPrice)}
+              </p>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { Bounce, toast } from "react-toastify";
 
 export default function ProfileDetails() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -78,7 +78,17 @@ export default function ProfileDetails() {
       );
       if (res.ok) {
         setCanEdit(false);
-        toast.success("Profile updated");
+        toast.success("Profile updated", {
+          position: "bottom-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        });
       } else {
         toast.error("Error updating try later");
       }

@@ -61,7 +61,7 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
   const handleAddToCartOrWishlist = async (path: string, productId: string) => {
     if (!userId) {
       toast.warn("Please login to continue", {
-        closeButton: false,
+        closeButton: true,
         pauseOnHover: true,
       });
       router.push("/login");
@@ -82,12 +82,12 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
 
       if (listResponse.status === 409) {
         toast.info(`Item already in ${path}`, {
-          closeButton: false,
+          closeButton: true,
           pauseOnHover: true,
         });
       } else if (listResponse.ok) {
         toast.success(`Item added to ${path}`, {
-          closeButton: false,
+          closeButton: true,
           pauseOnHover: true,
         });
       } else {
@@ -96,7 +96,7 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
       }
     } catch (error) {
       toast.error(`Failed to add item to ${path}`, {
-        closeButton: false,
+        closeButton: true,
         pauseOnHover: true,
       });
     }
@@ -110,12 +110,11 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
     <>
       {loading ? (
         <div className="flex justify-center items-center h-screen">
-          <p>Loading...</p> {/* You can replace this with a loader component */}
+          <p>Loading...</p>
         </div>
       ) : (
         <Modal>
           <div className="bg-white relative rounded-lg w-full flex flex-col sm:flex-col md:flex-row justify-center items-center m-2 p-2 sm:p-4 md:p-3 lg:p-4 xl:p-6 2xl:p-8 sm:m-4 xl:m-6 2xl:m-8">
-            {/* Close Button */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -143,7 +142,6 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
               )}
             </div>
 
-            {/* Product Info */}
             <div className="xs:w-full sm:w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex flex-col justify-center m-2">
               <h2 className="text-2xl font-semibold mb-2">{details?.name}</h2>
               <p className="text-gray-600 mb-4">{details?.description}</p>

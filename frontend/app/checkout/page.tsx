@@ -5,8 +5,7 @@ import Script from "next/script";
 import axios from "axios";
 
 import AddAddressModal from "@/components/AddAddressModal";
-import { toast } from "react-toastify";
-import Header from "@/components/Header";
+import { Bounce, toast } from "react-toastify";
 
 declare var Razorpay: any;
 
@@ -185,6 +184,17 @@ const Checkout: React.FC = () => {
 
             await orderRes.json();
             setOnProcessing(false);
+            toast.success("Order place successfully", {
+              position: "bottom-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+              transition: Bounce,
+            });
             router.push("/orders");
           } catch (error) {
             toast.error("Error during payment process");
@@ -196,7 +206,7 @@ const Checkout: React.FC = () => {
         prefill: {
           email: "aravindsiva1509@gmail.com",
         },
-        theme: { color: "#F37254" },
+        theme: { color: "#638759" },
       };
 
       const rzp = new Razorpay(options);
@@ -237,6 +247,17 @@ const Checkout: React.FC = () => {
 
       await orderRes.json();
       setOnProcessing(false);
+      toast.success("Order place successfully", {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       router.push("/orders");
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -258,10 +279,9 @@ const Checkout: React.FC = () => {
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
       />
-      <Header title="Checkout" />
       <div className="flex flex-col justify-center items-center">
         <div className="w-full flex flex-col items-center md:items-start md:flex-row p-3">
-          <div className="w-full md:w-4/6 m-3 flex flex-col gap-8">
+          <div className="w-full md:w-4/6 m-3 flex flex-col gap-8 text-xs sm:text-sm md:text-base">
             <div className="bg-[#638759] rounded-lg shadow-lg p-4 w-full flex flex-col gap-3">
               <h3 className="text-lg font-semibold text-white">
                 1. Select a Delivery Address
@@ -387,7 +407,7 @@ const Checkout: React.FC = () => {
                       <thead>
                         <tr>
                           <th>Image</th>
-                          <th>Product Name</th>
+                          <th>Name</th>
                           <th>Quantity</th>
                           <th>Price</th>
                         </tr>
@@ -411,7 +431,6 @@ const Checkout: React.FC = () => {
                                 <span>{item.quantity}</span>
                               </div>
                             </td>
-
                             <td>₹{item.price * item.quantity}</td>
                           </tr>
                         ))}
@@ -420,7 +439,9 @@ const Checkout: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <button
-                      className="bg-white text-green-800 py-2 px-4 rounded hover:scale-110"
+                      className={`bg-white text-green-800 py-2 px-4 rounded duration-150 transition-all ease-in-out ${
+                        !onProcessing ? "hover:scale-105" : "bg-slate-200"
+                      }`}
                       onClick={handlePlaceOrder}
                       disabled={onProcessing}
                     >
