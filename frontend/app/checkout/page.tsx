@@ -180,8 +180,19 @@ const Checkout: React.FC = () => {
           razorpay_order_id: string;
           razorpay_signature: string;
         }) {
-          alert(
-            `Payment successful. Payment ID: ${response.razorpay_payment_id}`
+          toast.success(
+            `Payment successful. Payment ID: ${response.razorpay_payment_id}`,
+            {
+              position: "bottom-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+              transition: Bounce,
+            }
           );
           try {
             const orderRes = await fetch(

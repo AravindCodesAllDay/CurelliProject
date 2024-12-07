@@ -61,7 +61,7 @@ export default function Orders() {
           throw new Error("Failed to fetch data");
         }
         const data = await res.json();
-        setOrders(data);
+        setOrders(data.reverse());
         setError(null);
       } catch (error) {
         console.error("Error fetching user orders:", error);
