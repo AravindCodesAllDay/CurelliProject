@@ -1,9 +1,12 @@
 "use client";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { Bounce, toast } from "react-toastify";
 
 export default function ProfileDetails() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
+  const { token, checkToken } = useUser();
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -14,19 +17,32 @@ export default function ProfileDetails() {
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserId = localStorage.getItem("id");
-      setUserId(storedUserId);
+    const verifyToken = async () => {
+      const isTokenValid = await checkToken();
+      if (!isTokenValid) {
+        router.push("/login");
+      }
+    };
+
+    if (token) {
+      verifyToken();
+    } else {
+      router.push("/login");
     }
-  }, []);
+  }, [token, checkToken, router]);
+
   useEffect(() => {
     const fetchDetails = async () => {
-      if (!userId) return;
+      if (!token) return;
 
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (res.ok) {
           const data: any = await res.json();
           setFormData({
@@ -34,7 +50,7 @@ export default function ProfileDetails() {
             gender: data.gender,
             mail: data.mail,
             phone: data.phone,
-            dob: await convertDate(data.dob),
+            dob: convertDate(data.dob),
           });
         } else {
           throw new Error("Failed to fetch user details");
@@ -46,9 +62,9 @@ export default function ProfileDetails() {
     };
 
     fetchDetails();
-  }, [userId]);
+  }, [token]);
 
-  const convertDate = async (dateString: string) => {
+  const convertDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -69,11 +85,12 @@ export default function ProfileDetails() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ ...formData, userId }),
+          body: JSON.stringify({ ...formData }),
         }
       );
       if (res.ok) {
@@ -90,19 +107,19 @@ export default function ProfileDetails() {
           transition: Bounce,
         });
       } else {
-        toast.error("Error updating try later");
+        toast.error("Error updating profile, try again later");
       }
     } catch (error) {
-      console.error("Error editing user:", error);
-      toast.error("Failed to update user details");
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
     }
   };
 
   return (
     <>
       <div className="bg-[#CDDCCB] rounded-lg overflow-hidden cursor-default w-11/12 md:w-5/6 mx-auto mb-3">
-        <div>
-          <form>
+        <form onSubmit={handleSubmit}>
+          <div>
             <div className="px-4 py-2 border-b border-gray-300 flex items-center justify-between">
               <input
                 type="text"
@@ -117,6 +134,7 @@ export default function ProfileDetails() {
               <h3 className="font-semibold text-lg">Personal Information</h3>
               {!canEdit && (
                 <button
+                  type="button"
                   className="flex items-center gap-1 ml-auto border-2 border-green-700 bg-green-700 hover:bg-green-400 text-white p-1 px-2 rounded "
                   onClick={() => setCanEdit(true)}
                   disabled={canEdit}
@@ -213,37 +231,44 @@ export default function ProfileDetails() {
             <div className="px-4 py-2 border-b border-gray-300 font-medium">
               Mobile Number
             </div>
-            <div className="px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+            <div className="flex px-4 py-2 border-b border-gray-300">
               <input
-                type="number"
-                className="border border-gray-300 rounded px-3 py-2 placeholder-gray-400 text-gray-700 focus:outline-none focus:border-brown-500 flex-grow mr-2"
-                placeholder="XXXXX XXXXX"
+                type="text"
                 name="phone"
+                className="border border-gray-300 rounded w-full px-3 py-2 placeholder-gray-400 text-gray-700 focus:outline-none focus:border-brown-500"
+                placeholder="Mobile Number"
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={!canEdit}
               />
             </div>
+
             {canEdit && (
-              <div className="justify-center flex m-1 gap-3 p-3">
+              <div className="px-4 py-2 flex justify-between">
                 <button
                   type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-500"
-                  onClick={handleSubmit}
+                  className="flex items-center gap-1 ml-auto border-2 border-green-700 bg-green-700 hover:bg-green-400 text-white p-1 px-2 rounded "
                 >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  className="bg-gray-400 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-300"
-                  onClick={() => setCanEdit(false)}
-                >
-                  Cancel
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="size-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                    />
+                  </svg>
+                  Save Changes
                 </button>
               </div>
             )}
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </>
   );
