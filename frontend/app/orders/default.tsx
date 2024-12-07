@@ -101,7 +101,7 @@ export default function Orders() {
         <div className="text-center py-8 text-gray-500">
           <p className="text-lg font-semibold">No orders found</p>
           <p className="text-sm">
-            Looks like you haven't placed any orders yet.
+            Looks like you haven&apos;t placed any orders yet.
           </p>
         </div>
       ) : (
