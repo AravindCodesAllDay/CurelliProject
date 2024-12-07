@@ -73,7 +73,7 @@ export default function ProfileDetails() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ formData, userId }),
+          body: JSON.stringify({ ...formData, userId }),
         }
       );
       if (res.ok) {

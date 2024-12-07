@@ -1,15 +1,28 @@
 const Product = require("../models/productModel");
 const User = require("../models/userModel");
+const { verifyToken } = require("../controller/tokenController");
 
-exports.getWishlist = async (req, res) => {
+async function getWishlist(req, res) {
   try {
-    const { userId } = req.params;
+    const authHeader = req.headers.authorization;
 
-    if (!userId) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
     }
 
-    const user = await User.findById(userId).populate("wishlist");
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    const user = await User.findById(userId).populate({
+      path: "wishlist",
+      select: "name rating ratingcount photos price status",
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -23,7 +36,6 @@ exports.getWishlist = async (req, res) => {
         rating: product.rating,
         ratingcount: product.ratingcount,
         photos: product.photos,
-        description: product.description,
         price: product.price,
       }));
 
@@ -32,18 +44,32 @@ exports.getWishlist = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
 
-exports.addWishlist = async (req, res) => {
+// Add to Wishlist
+async function addWishlist(req, res) {
   try {
-    const { userId, productId } = req.body;
+    const { productId } = req.params;
 
-    if (!userId || !productId) {
+    if (!productId) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
 
     const user = await User.findById(userId);
-
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -75,13 +101,29 @@ exports.addWishlist = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
 
-exports.removeWishlist = async (req, res) => {
+// Remove from Wishlist
+async function removeWishlist(req, res) {
   try {
-    const { userId, productId } = req.body;
-    if (!userId || !productId) {
+    const { productId } = req.params;
+
+    if (!productId) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
 
     const user = await User.findById(userId);
@@ -107,4 +149,10 @@ exports.removeWishlist = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
+}
+
+module.exports = {
+  getWishlist,
+  addWishlist,
+  removeWishlist,
 };

@@ -1,19 +1,46 @@
 const User = require("../models/userModel");
 const Address = require("../models/addressModel");
 const { mongoose } = require("mongoose");
+const { verifyToken } = require("../controller/tokenController");
 
-exports.userDetails = async (req, res) => {
+// Update User Details
+async function userDetails(req, res) {
   try {
-    const { formData, userId } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(userId) || !formData) {
+    const { name, gender, mail, phone, dob } = req.body;
+
+    if (!name || !gender || !mail || !phone || !dob) {
       return res.status(400).json({ message: "Invalid request" });
     }
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+    formData = {
+      name,
+      gender,
+      mail,
+      phone,
+      dob,
+    };
+
     const updatedUser = await User.findByIdAndUpdate(userId, formData, {
       new: true,
     });
+
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
+
     res.json({
       success: true,
       message: "User information updated successfully",
@@ -23,17 +50,27 @@ exports.userDetails = async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-};
+}
 
-exports.getAddress = async (req, res) => {
+// Get Address
+async function getAddress(req, res) {
   try {
-    const { userId } = req.params;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
     if (!userId) {
-      return res.status(400).json({ message: "Invalid request" });
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
 
     const user = await User.findById(userId);
-
     if (!user) {
       return res.status(404).send("User Not Found");
     }
@@ -43,14 +80,15 @@ exports.getAddress = async (req, res) => {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.addAddress = async (req, res) => {
+// Add Address
+async function addAddress(req, res) {
   try {
-    const { userId, name, address, district, state, pincode, addressContact } =
+    const { name, address, district, state, pincode, addressContact } =
       req.body;
+
     if (
-      !userId ||
       !name ||
       !address ||
       !district ||
@@ -60,6 +98,20 @@ exports.addAddress = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Invalid request" });
     }
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
 
     const user = await User.findById(userId).populate("address");
 
@@ -67,7 +119,7 @@ exports.addAddress = async (req, res) => {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    const newaddress = new Address({
+    const newAddress = new Address({
       name,
       address,
       district,
@@ -76,7 +128,7 @@ exports.addAddress = async (req, res) => {
       addressContact,
     });
 
-    user.address.push(newaddress);
+    user.address.push(newAddress);
     await user.save();
 
     return res.status(200).json({ message: "Address added successfully" });
@@ -84,13 +136,29 @@ exports.addAddress = async (req, res) => {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.removeAddress = async (req, res) => {
+// Remove Address
+async function removeAddress(req, res) {
   try {
-    const { addressId, userId } = req.body;
-    if (!userId || !addressId) {
+    const { addressId } = req.params;
+
+    if (!addressId) {
       return res.status(400).json({ message: "Invalid request" });
+    }
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
 
     const user = await User.findById(userId).populate("address");
@@ -114,4 +182,11 @@ exports.removeAddress = async (req, res) => {
     console.error(error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
+}
+
+module.exports = {
+  userDetails,
+  getAddress,
+  addAddress,
+  removeAddress,
 };

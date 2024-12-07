@@ -4,22 +4,23 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
+import axios from "axios";
+import { useUser } from "@/context/UserContext";
 import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
-import axios from "axios";
 import { FaEye } from "react-icons/fa";
 
 import google from "@/assets/google.png";
 
 export default function Loginform() {
   const router = useRouter();
+  const { token, name, checkToken, logout, setUserContext } = useUser();
   const [mail, setMail] = useState("");
   const [pswd, setPswd] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [showPswd, setShowPswd] = useState(false);
   const [wrongPswd, setWrongPswd] = useState(false);
 
-  const handleSubmission = async (e: React.FormEvent) => {
+  const handleLoginSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -51,11 +52,11 @@ export default function Loginform() {
         throw new Error("Login failed.");
       }
 
-      const user = await response.json();
+      const data = await response.json();
       toast.success("Login Successful", { position: "top-center" });
 
-      localStorage.setItem("id", user._id);
-      localStorage.setItem("name", user.name);
+      setUserContext(data.name, data.token);
+
       router.push("/");
     } catch (error: any) {
       console.error("Error during login:", error.message);
@@ -65,19 +66,26 @@ export default function Loginform() {
     }
   };
 
-  const login = useGoogleLogin({
-    onSuccess: (codeResponse) => setUser(codeResponse),
-    onError: (error) => console.log("Login Failed:", error),
-  });
-
   useEffect(() => {
-    if (user) {
+    if (token && name) {
+      checkToken().then((isValid) => {
+        if (isValid) {
+          router.push("/");
+        } else {
+          logout();
+        }
+      });
+    }
+  }, [token, name, router]);
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (codeResponse) => {
       axios
         .get(
-          `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`,
+          `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${codeResponse.access_token}`,
           {
             headers: {
-              Authorization: `Bearer ${user.access_token}`,
+              Authorization: `Bearer ${codeResponse.access_token}`,
               Accept: "application/json",
             },
           }
@@ -96,100 +104,90 @@ export default function Loginform() {
               }),
             }
           );
+
           if (result.ok) {
             const data = await result.json();
-            localStorage.setItem("id", data._id);
-            localStorage.setItem("name", data.name);
+
+            setUserContext(data.name, data.token);
             router.push("/");
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error("Error fetching user data:", err))
         .finally(() => {
-          if (user) {
-            googleLogout();
-          }
+          if (codeResponse.access_token) googleLogout();
         });
-    }
-  }, [user, router]);
+    },
+    onError: (error) => console.log("Google Login Failed:", error),
+  });
 
   return (
-    <div className="h-100% flex justify-center items-center bg-gray-100 xs:p-3 sm:p-4 md:p-5 lg:p-12 xl:p-12 2xl:p-14">
-      <div className="bg-white rounded-md shadow-lg w-[440px] xs:p-4 sm:p-8 md:p-10 lg:p-12 xl:p-12 2xl:p-14">
-        <h2 className="text-[#277933] text-2xl mb-6 text-center font-semibold">
+    <div className="h-full flex justify-center items-center bg-gray-100 p-4">
+      <div className="bg-white rounded-md shadow-lg max-w-md w-full p-6">
+        <h2 className="text-green-700 text-2xl mb-4 text-center font-semibold">
           Login
         </h2>
-        <form onSubmit={handleSubmission} className="flex flex-col gap-6">
+        <form onSubmit={handleLoginSubmission} className="flex flex-col gap-4">
           <input
             type="email"
             value={mail}
             onChange={(e) => setMail(e.target.value)}
             placeholder="Email"
-            className="input-field border-[1px] p-2 rounded border-[#0d5b41]"
+            className="input-field p-2 rounded border border-green-700"
             required
           />
-          <div className="relative flex items-center">
+          <div className="relative">
             <input
               type={showPswd ? "text" : "password"}
               value={pswd}
-              autoComplete="off"
               onChange={(e) => setPswd(e.target.value)}
               placeholder="Password"
-              className={`input-field border-[1px] p-2 rounded border-[#0d5b41] w-full ${
-                wrongPswd ? "border-red-800" : "border-[#0d5b41]"
-              }`}
+              className={`input-field p-2 rounded border ${
+                wrongPswd ? "border-red-500" : "border-green-700"
+              } w-full`}
               required
             />
-
             <FaEye
               onClick={() => setShowPswd(!showPswd)}
-              className="cursor-pointer absolute right-0 top-1/2 transform -translate-y-1/2 mr-2"
+              className="cursor-pointer absolute right-2 top-2/4 transform -translate-y-1/2"
             />
           </div>
           {wrongPswd && (
-            <p className="flex text-sm text-red-800 -mt-3 items-center">
-              Incorrect password
-            </p>
+            <p className="text-red-500 text-sm">Incorrect password</p>
           )}
-
-          <p className="text-end">
-            <Link
-              href="/forgotpswd"
-              className="cursor-pointer hover:text-[#b65c21] text-[#2a64ba]"
-            >
-              Forgot Password?
-            </Link>
+          <p className="text-end text-blue-600">
+            <Link href="/forgotpswd">Forgot Password?</Link>
           </p>
-
-          <button
-            type="submit"
-            className="submit-button bg-green-700 text-white h-10 p-2 rounded z-20"
-          >
+          <button type="submit" className="bg-green-700 text-white p-2 rounded">
             Submit
           </button>
         </form>
-        <p className="text-start mt-4">
+        <p className="text-sm mt-4">
           By continuing, you agree to Curelli Foods{" "}
-          <Link
-            href="/policy"
-            className="font-semibold cursor-pointer hover:text-[#2a64ba] text-[#277933]"
-          >
+          <Link href="/policy" className="text-green-700 font-semibold">
             Privacy Policy.
           </Link>
         </p>
-        <hr className="my-3" />
-        <button
-          className="submit-button text-black p-2 border-2 my-2 rounded-full flex items-center w-full justify-center"
-          onClick={() => login()}
-        >
-          <Image src={google} alt="google logo" className="size-6 mr-2" />
-          <p className="font-semibold">Continue with Google</p>
-        </button>
-        <button
-          className="submit-button text-black p-2 border-2 rounded-full flex items-center justify-center font-semibold hover:bg-[#277933] hover:text-white w-full"
-          onClick={() => router.push("/register")}
-        >
-          Create Account
-        </button>
+        <div className="flex justify-between items-center mt-4 gap-3">
+          <div className="flex-1 border-t border-gray-400"></div>
+          <p className="text-center text-[#277933]">OR</p>
+          <div className="flex-1 border-t border-gray-400"></div>
+        </div>
+        <div className="flex flex-col items-center justify-center mt-6 gap-3">
+          <button
+            className="flex items-center justify-center  border-[1px] p-2 rounded w-full  bg-[#f4f4f4]"
+            onClick={() => loginWithGoogle()}
+          >
+            <Image src={google} alt="Google logo" className="w-5 h-5 mr-2" />
+            Continue with Google
+          </button>
+
+          <button
+            className="border-[2px] p-2 rounded w-full"
+            onClick={() => router.push("/register")}
+          >
+            Create Account
+          </button>
+        </div>
       </div>
     </div>
   );

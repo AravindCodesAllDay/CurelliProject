@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import Rating from "@mui/material/Rating";
 import { toast } from "react-toastify";
+import { useUser } from "@/context/UserContext";
 
 interface Product {
   _id: string;
@@ -16,9 +17,8 @@ interface Product {
 
 export default function Products() {
   const router = useRouter();
+  const { token } = useUser();
   const [cardDetails, setCardDetails] = useState<Product[]>([]);
-  const userId =
-    typeof window !== "undefined" ? localStorage.getItem("id") : null;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +52,7 @@ export default function Products() {
   };
 
   const handleAddToCartOrWishlist = async (path: string, productId: string) => {
-    if (!userId) {
+    if (!token) {
       toast.warn("Please login to continue", {
         closeButton: false,
         pauseOnHover: true,
@@ -63,13 +63,13 @@ export default function Products() {
 
     try {
       const listResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${path}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${path}/${productId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ userId, productId }),
         }
       );
 

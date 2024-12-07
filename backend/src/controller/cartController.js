@@ -1,14 +1,21 @@
 const User = require("../models/userModel");
-const Products = require("../models/productModel");
+const Product = require("../models/productModel");
 
-exports.getCart = async (req, res) => {
+const { verifyToken } = require("./tokenController");
+
+async function getCart(req, res) {
   try {
-    const { userId } = req.params;
+    const authHeader = req.headers.authorization;
 
-    if (!userId) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
     }
 
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
     const user = await User.findById(userId).populate("cart.productId");
 
     if (!user) {
@@ -16,32 +23,39 @@ exports.getCart = async (req, res) => {
     }
 
     const cartItems = user.cart
-      .filter((item) => item.productId.status === "inStock")
-      .map((item) => {
-        const product = item.productId;
-        return {
-          productId: product._id,
-          name: product.name,
-          photos: product.photos,
-          price: product.price,
-          quantity: item.quantity,
-        };
-      });
+      .filter((item) => item.productId && item.productId.status === "inStock")
+      .map((item) => ({
+        productId: item.productId._id,
+        name: item.productId.name,
+        photos: item.productId.photos,
+        price: item.productId.price,
+        quantity: item.quantity,
+      }));
 
     return res.status(200).json(cartItems);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
 
-exports.addCart = async (req, res) => {
+async function addCart(req, res) {
   try {
-    const { userId, productId } = req.body;
-    if (!userId || !productId) {
+    const { productId } = req.params;
+
+    if (!productId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
 
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
     const user = await User.findById(userId);
 
     if (!user) {
@@ -56,7 +70,7 @@ exports.addCart = async (req, res) => {
       return res.status(409).json({ message: "Item already in cart" });
     }
 
-    const productData = await Products.findById(productId);
+    const productData = await Product.findById(productId);
     if (!productData) {
       return res.status(404).json({ error: "Product not found" });
     }
@@ -73,16 +87,26 @@ exports.addCart = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
 
-exports.removeCart = async (req, res) => {
+async function removeCart(req, res) {
   try {
-    const { userId, productId } = req.body;
+    const { productId } = req.params;
 
-    if (!userId || !productId) {
+    if (!productId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+    const authHeader = req.headers.authorization;
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
     const user = await User.findById(userId);
 
     if (!user) {
@@ -106,17 +130,26 @@ exports.removeCart = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
 
-exports.cartQuantity = async (req, res) => {
+async function cartQuantity(req, res) {
   try {
-    const { sign } = req.params;
-    const { userId, productId } = req.body;
+    const { productId, sign } = req.params;
 
-    if (!userId || !productId || !sign || (sign !== "+" && sign !== "-")) {
+    if (!productId || !sign || (sign !== "+" && sign !== "-")) {
       return res.status(400).json({ message: "Invalid request" });
     }
+    const authHeader = req.headers.authorization;
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -150,28 +183,11 @@ exports.cartQuantity = async (req, res) => {
     console.error("Error updating cart quantity:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
-};
+}
 
-exports.emptyCart = async (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ message: "All required fields must be provided." });
-    }
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not Found" });
-    }
-
-    user.cart = [];
-    await user.save();
-
-    return res.status(200).json({ message: "Cart cleared successfully" });
-  } catch (error) {
-    console.error("Error clearing cart:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
+module.exports = {
+  getCart,
+  addCart,
+  removeCart,
+  cartQuantity,
 };

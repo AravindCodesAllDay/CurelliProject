@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/context/UserContext";
 import React, { useState, useEffect } from "react";
 import { Bounce, toast } from "react-toastify";
 
@@ -11,7 +12,7 @@ export default function AddAddressModal({
   onClose,
   onRefresh,
 }: AddAddressModalProps) {
-  const [userId, setUserId] = useState<string | null>(null);
+  const { token } = useUser();
   const [name, setName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
@@ -20,13 +21,7 @@ export default function AddAddressModal({
   const [addressContact, setAddressContact] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const id = localStorage.getItem("id");
-    setUserId(id);
-  }, []);
-
   const validateFields = (): string | null => {
-    if (!userId) return "User ID is missing.";
     if (!name.trim()) return "Name is required.";
     if (!address.trim()) return "Address is required.";
     if (!district.trim()) return "District is required.";
@@ -60,9 +55,9 @@ export default function AddAddressModal({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            userId,
             name,
             address,
             district,

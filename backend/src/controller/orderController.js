@@ -1,9 +1,44 @@
 const Orders = require("../models/orderModel");
 const User = require("../models/userModel");
 
+const { verifyToken } = require("./tokenController");
+
+async function getOrders(req, res, next) {
+  try {
+    const orders = await Orders.find({})
+      .populate({
+        path: "products.productId",
+        model: "Product",
+      })
+      .lean();
+
+    const transformedOrders = orders.map((order) => ({
+      ...order,
+      products: order.products.map((item) => ({
+        ...item.productId,
+        quantity: item.quantity,
+      })),
+    }));
+
+    return res.status(200).json(transformedOrders);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: error.message });
+  }
+}
 async function getUserOrders(req, res, next) {
   try {
-    const { userId } = req.params;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
 
     const user = await User.findById(userId);
     if (!user) {
@@ -31,31 +66,6 @@ async function getUserOrders(req, res, next) {
     return res.status(500).json({ message: error.message });
   }
 }
-
-async function getOrders(req, res, next) {
-  try {
-    const orders = await Orders.find({})
-      .populate({
-        path: "products.productId",
-        model: "Product",
-      })
-      .lean();
-
-    const transformedOrders = orders.map((order) => ({
-      ...order,
-      products: order.products.map((item) => ({
-        ...item.productId,
-        quantity: item.quantity,
-      })),
-    }));
-
-    return res.status(200).json(transformedOrders);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: error.message });
-  }
-}
-
 async function getOrder(req, res, next) {
   try {
     const { orderId } = req.params;

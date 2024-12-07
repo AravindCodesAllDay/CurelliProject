@@ -6,6 +6,7 @@ import axios from "axios";
 
 import AddAddressModal from "@/components/AddAddressModal";
 import { Bounce, toast } from "react-toastify";
+import { useUser } from "@/context/UserContext";
 
 declare var Razorpay: any;
 
@@ -27,57 +28,70 @@ interface Address {
   addressContact: string;
 }
 
+interface User {
+  _id: string;
+  mail: string;
+  address: Address[];
+  cart: CartItem[];
+}
+
 const Checkout: React.FC = () => {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { token, checkToken } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [userAddress, setUserAddress] = useState<Address[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [addModal, setAddModal] = useState(false);
   const [getAddress, setGetAddress] = useState(false);
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
-  const [addressId, setAddressId] = useState<string>("");
+  const [address, setAddress] = useState<Address | null>(null);
   const [paymentmethod, setPaymentmethod] = useState<string>("");
   const [deliveryPrice, setDeliveryPrice] = useState(0);
   const [onProcessing, setOnProcessing] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchCartAddressDetails = useCallback(async () => {
+  const fetchUserDetails = useCallback(async () => {
     setLoading(true);
     try {
-      const addressResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/address/${userId}`
-      );
-      const cartResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${userId}`
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const address = await addressResponse.json();
-      const cart = await cartResponse.json();
+      if (!response.ok) {
+        throw new Error("Failed to load user data.");
+      }
 
-      setUserAddress(address);
-      setCartItems(cart);
+      const user = await response.json();
+      setUser(user);
+      setUserAddress(user.address);
+      setCartItems(user.cart);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load address or cart data.");
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [token]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserId = localStorage.getItem("id");
-      if (storedUserId !== userId) {
-        setUserId(storedUserId);
+    const verifyToken = async () => {
+      const isTokenValid = await checkToken();
+      if (!isTokenValid) {
+        router.push("/login");
       }
-    }
-  }, [userId]);
+    };
 
-  useEffect(() => {
-    if (userId && userAddress.length === 0 && cartItems.length === 0) {
-      fetchCartAddressDetails();
+    if (token) {
+      verifyToken();
+      fetchUserDetails();
+    } else {
+      router.push("/login");
     }
-  }, [userId, userAddress.length, cartItems.length, fetchCartAddressDetails]);
+  }, [token, fetchUserDetails, checkToken, router]);
 
   useEffect(() => {
     if (!loading && cartItems.length === 0) {
@@ -87,7 +101,7 @@ const Checkout: React.FC = () => {
 
   const calculateDeliveryPrice = async (COD: string) => {
     try {
-      if (!userId || !addressId) {
+      if (!token || !address?._id) {
         throw new Error("Missing userId or addressId for delivery calculation");
       }
       if (!COD || !["COD", "Prepaid"].includes(COD)) {
@@ -97,15 +111,19 @@ const Checkout: React.FC = () => {
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/get-delivery/`,
-        { userId, addressId, COD }
+        { addressId: address._id, COD },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.status !== 200) {
         throw new Error("Failed to fetch delivery price");
       }
 
-      const deliveryPrice = response.data.deliveryPrice;
-      return deliveryPrice;
+      return response.data.deliveryPrice;
     } catch (error) {
       console.error("Error calculating delivery price:", error);
       throw error;
@@ -114,7 +132,7 @@ const Checkout: React.FC = () => {
 
   useEffect(() => {
     const fetchDeliveryPrice = async () => {
-      if (addressId && paymentmethod && cartItems.length > 0) {
+      if (address && paymentmethod) {
         try {
           const price = await calculateDeliveryPrice(paymentmethod);
           setDeliveryPrice(price);
@@ -126,7 +144,7 @@ const Checkout: React.FC = () => {
     };
 
     fetchDeliveryPrice();
-  }, [addressId, paymentmethod, cartItems]);
+  }, [address?._id, paymentmethod]);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -140,10 +158,16 @@ const Checkout: React.FC = () => {
   const handlePayment = async () => {
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/shiprocket/create-payment`,
+        `${process.env.NEXT_PUBLIC_API_URL}/razorpay/create-payment`,
         {
           amount: `${Math.round(subtotalPrice + deliveryPrice)}`,
-          email: "aravindsiva1509@gmail.com",
+          email: user!.mail,
+          mobile: address?.addressContact,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const { order_id } = response.data;
@@ -166,11 +190,11 @@ const Checkout: React.FC = () => {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                   order_id,
-                  userId,
-                  addressId,
+                  addressId: address?._id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
@@ -184,7 +208,7 @@ const Checkout: React.FC = () => {
 
             await orderRes.json();
             setOnProcessing(false);
-            toast.success("Order place successfully", {
+            toast.success("Order placed successfully", {
               position: "bottom-center",
               autoClose: 5000,
               hideProgressBar: false,
@@ -199,14 +223,18 @@ const Checkout: React.FC = () => {
           } catch (error) {
             toast.error("Error during payment process");
             console.error("Error creating payment:", error);
-
             setOnProcessing(false);
           }
         },
         prefill: {
-          email: "aravindsiva1509@gmail.com",
+          email: user!.mail,
         },
         theme: { color: "#638759" },
+        modal: {
+          ondismiss: () => {
+            setOnProcessing(false);
+          },
+        },
       };
 
       const rzp = new Razorpay(options);
@@ -233,10 +261,10 @@ const Checkout: React.FC = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            userId,
-            addressId,
+            addressId: address?._id,
           }),
         }
       );
@@ -247,7 +275,7 @@ const Checkout: React.FC = () => {
 
       await orderRes.json();
       setOnProcessing(false);
-      toast.success("Order place successfully", {
+      toast.success("Order placed successfully", {
         position: "bottom-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -259,16 +287,8 @@ const Checkout: React.FC = () => {
         transition: Bounce,
       });
       router.push("/orders");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error during placing order", error.message);
-      } else {
-        console.error(
-          "Error during placing order",
-          "An unknown error occurred."
-        );
-      }
-
+    } catch (error) {
+      console.error("Error during placing order", error);
       setOnProcessing(false);
     }
   };
@@ -292,13 +312,13 @@ const Checkout: React.FC = () => {
                     {userAddress.map((data) => (
                       <div
                         className={`flex items-center rounded border-2 p-1 gap-2 text-sm md:text-base cursor-pointer hover:border-green-600 hover:bg-green-50 ${
-                          addressId === data._id
+                          address?._id === data._id
                             ? "border-green-600 bg-green-100"
                             : ""
                         }`}
                         key={data._id}
                         onClick={() => {
-                          setAddressId(data._id);
+                          setAddress(data);
                           setGetAddress(true);
                         }}
                       >
@@ -323,13 +343,13 @@ const Checkout: React.FC = () => {
                   </div>
                 </>
               )}
-              {getAddress && (
+              {getAddress && address && (
                 <div className="bg-white rounded-lg p-3 flex items-center">
                   <p>
                     Selected Address :
                     <span className="font-semibold">
                       {
-                        userAddress.find((addr) => addr._id === addressId)
+                        userAddress.find((addr) => addr._id === address._id)
                           ?.address
                       }
                     </span>
@@ -477,7 +497,7 @@ const Checkout: React.FC = () => {
       {addModal && (
         <AddAddressModal
           onClose={() => setAddModal(false)}
-          onRefresh={() => fetchCartAddressDetails()}
+          onRefresh={() => fetchUserDetails()}
         />
       )}
     </>

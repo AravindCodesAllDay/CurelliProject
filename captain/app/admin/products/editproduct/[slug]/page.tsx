@@ -315,7 +315,7 @@ export default function UpdateProductForm({
             <input
               type="number"
               name="weight"
-              placeholder="in kg"
+              placeholder="in gm"
               min={0}
               value={formData.weight}
               onChange={handleChange}

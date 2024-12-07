@@ -2,14 +2,15 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+const tokenRoutes = require("./routes/tokenRoutes");
 const userRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
 const bestsellerRoutes = require("./routes/bestsellerRoutes");
 const carouselRoutes = require("./routes/carouselRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const mailRoutes = require("./routes/mailRoutes");
 const shiprocketRoutes = require("./routes/shiprocketRoutes");
+const razorpayRoutes = require("./routes/razorpayRoutes");
 
 const app = express();
 
@@ -45,14 +46,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+app.use("/token", tokenRoutes);
 app.use("/users", userRoutes);
 app.use("/orders", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/bestseller", bestsellerRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/admin", adminRoutes);
-app.use("/mail", mailRoutes);
 app.use("/shiprocket", shiprocketRoutes);
+app.use("/razorpay", razorpayRoutes);
 
 const start = async () => {
   try {

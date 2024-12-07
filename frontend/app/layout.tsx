@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Navbar from "@/components/navbar/Navbar";
+
+import { UserProvider } from "@/context/UserContext";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -28,9 +32,11 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <GoogleOAuthProvider clientId={clientId}>
         <body className={inter.className}>
-          <Navbar />
           <ToastContainer />
-          {children}
+          <UserProvider>
+            <Navbar />
+            {children}
+          </UserProvider>
         </body>
       </GoogleOAuthProvider>
     </html>

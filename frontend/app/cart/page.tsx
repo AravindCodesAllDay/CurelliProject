@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaShareAlt, FaTrash } from "react-icons/fa";
 import Link from "next/link";
+import { useUser } from "@/context/UserContext";
 
 interface CartItem {
   productId: string;
@@ -15,21 +16,24 @@ interface CartItem {
 
 const Cart: React.FC = () => {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { token, checkToken } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
   const handleQuantityChange = async (productId: string, sign: "+" | "-") => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/users/cart/${sign}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, productId }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${productId}/${sign}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) {
         const errorMessage =
@@ -57,39 +61,57 @@ const Cart: React.FC = () => {
   const fetchCartDetails = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/users/cart/${userId}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!response.ok) throw new Error("Failed to fetch cart details");
       const cart = await response.json();
       setCartItems(cart);
+      console.log(typeof cart);
     } catch (error) {
       console.error("Error fetching user cart:", error);
       setError("Error fetching cart. Please try again later.");
     } finally {
       setLoading(false);
     }
-  }, [userId, API_URL]);
+  }, [token]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserId = localStorage.getItem("id");
-      setUserId(storedUserId);
-    }
-  }, []);
+    const verifyToken = async () => {
+      const isTokenValid = await checkToken();
+      if (!isTokenValid) {
+        router.push("/login");
+      }
+    };
 
-  useEffect(() => {
-    if (userId) {
+    if (token) {
+      verifyToken();
       fetchCartDetails();
+    } else {
+      router.push("/login");
     }
-  }, [userId, fetchCartDetails]);
+  }, [token, fetchCartDetails, checkToken, router]);
 
   const handleDelete = async (productId: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/users/cart`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, productId }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/cart/${productId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to delete item");
 

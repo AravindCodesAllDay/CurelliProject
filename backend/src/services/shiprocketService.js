@@ -1,8 +1,8 @@
 const Orders = require("../models/orderModel");
 const User = require("../models/userModel");
 const axios = require("axios");
-const crypto = require("crypto");
-const Razorpay = require("razorpay");
+const { verifyPayment } = require("./razorpayService");
+const { verifyToken } = require("../controller/tokenController");
 
 require("dotenv").config();
 
@@ -10,8 +10,6 @@ const requiredEnvVars = [
   "SHIPROCKET_BASE_URL",
   "SHIPROCKET_EMAIL",
   "SHIPROCKET_PASSWORD",
-  "RAZORPAY_KEY_ID",
-  "RAZORPAY_KEY_SECRET",
 ];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
@@ -23,7 +21,6 @@ requiredEnvVars.forEach((key) => {
 const BASE_URL = process.env.SHIPROCKET_BASE_URL;
 let token = "";
 
-// Helper function to authenticate and manage the token
 async function authenticate() {
   if (token) {
     try {
@@ -56,65 +53,6 @@ async function authenticate() {
       error.response?.data || error.message
     );
     throw error;
-  }
-}
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
-async function setPayment(req, res) {
-  try {
-    const { amount, email } = req.body;
-
-    if (!amount || !email) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const options = {
-      // amount: parseInt(amount) * 100,
-      amount: 100,
-      currency: "INR",
-      receipt: `order_rcptid_${Date.now()}`,
-      payment_capture: 1,
-      notes: { email },
-    };
-
-    const order = await razorpay.orders.create(options);
-
-    res.status(200).json({
-      message: "Payment Process initiated",
-      order_id: order.id,
-    });
-  } catch (error) {
-    console.error(
-      "Error in setPayment:",
-      error.response?.data || error.message
-    );
-
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: error.response?.data || error.message,
-    });
-  }
-}
-
-async function verifyPayment(payment_id, order_id, signature) {
-  try {
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(`${order_id}|${payment_id}`)
-      .digest("hex");
-
-    if (signature === expectedSignature) {
-      return { verified: true, message: "Payment verified successfully!" };
-    } else {
-      return { verified: false, message: "Invalid signature!" };
-    }
-  } catch (error) {
-    console.error("Error in verifyPayment:", error.message);
-    return { verified: false, message: error.message };
   }
 }
 
@@ -156,7 +94,7 @@ function calculateDimensionsAndWeight(cart) {
         product.breadth || 1
       );
       dimensions.totalHeight += (product.height || 1) * quantity;
-      dimensions.totalWeight += (product.weight || 0.1) * quantity;
+      dimensions.totalWeight += ((product.weight || 0.1) * quantity) / 1000;
 
       return dimensions;
     },
@@ -167,18 +105,22 @@ function calculateDimensionsAndWeight(cart) {
 async function calculateDeliveryPrice({
   pickup_postcode,
   delivery_postcode,
-  weight,
   cod,
   dimensions,
 }) {
   try {
-    const { maxLength = 1, maxBreadth = 1, totalHeight = 1 } = dimensions;
+    const {
+      maxLength = 1,
+      maxBreadth = 1,
+      totalHeight = 1,
+      totalWeight = 1,
+    } = dimensions;
 
     const response = await axios.get(`${BASE_URL}/courier/serviceability/`, {
       params: {
         pickup_postcode,
         delivery_postcode,
-        weight,
+        weight: totalWeight,
         cod,
         length: maxLength,
         breadth: maxBreadth,
@@ -199,11 +141,22 @@ async function calculateDeliveryPrice({
 
 async function getDeliveryPrice(req, res) {
   try {
-    const { userId, addressId, COD } = req.body;
-    if (!userId || !addressId || !COD) {
+    const { addressId, COD } = req.body;
+    const authHeader = req.headers.authorization;
+
+    if (!addressId || !COD) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const customToken = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(customToken);
     const user = await User.findById(userId).populate("cart.productId");
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -216,7 +169,6 @@ async function getDeliveryPrice(req, res) {
     const deliveryPrice = await calculateDeliveryPrice({
       pickup_postcode: primaryAddress.pin_code,
       delivery_postcode: address.pincode,
-      weight: dimensions.totalWeight,
       cod: COD == "COD" ? 1 : 0,
       dimensions,
     });
@@ -234,10 +186,21 @@ async function getDeliveryPrice(req, res) {
 
 async function createOrder(req, res) {
   try {
-    const { addressId, userId } = req.body;
-    if (!addressId || !userId) {
+    const { addressId } = req.body;
+    const authHeader = req.headers.authorization;
+    if (!addressId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const customToken = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(customToken);
 
     const user = await User.findById(userId).populate("cart.productId");
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -266,7 +229,6 @@ async function createOrder(req, res) {
     const deliveryPrice = await calculateDeliveryPrice({
       pickup_postcode: primaryAddress.pin_code,
       delivery_postcode: address.pincode,
-      weight: dimensions.totalWeight,
       cod: 1,
       dimensions,
     });
@@ -300,7 +262,7 @@ async function createOrder(req, res) {
       billing_state: address.state,
       billing_country: address.country || "India",
       billing_email: user.mail,
-      billing_phone: user.phone?.toString() || "",
+      billing_phone: address.addressContact?.toString() || "",
       shipping_is_billing: true,
       order_items: user.cart.map((item) => ({
         name: item.productId.name,
@@ -326,7 +288,7 @@ async function createOrder(req, res) {
     const shiprocketResponse = await axios.post(
       `${BASE_URL}/orders/create/adhoc`,
       shiprocketOrder,
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
     );
 
     if (!shiprocketResponse.data || shiprocketResponse.data.status_code !== 1) {
@@ -365,14 +327,12 @@ async function createOrderPrepaid(req, res) {
   try {
     const {
       addressId,
-      userId,
       razorpay_payment_id,
       razorpay_order_id,
       razorpay_signature,
     } = req.body;
     if (
       !addressId ||
-      !userId ||
       !razorpay_payment_id ||
       !razorpay_order_id ||
       !razorpay_signature
@@ -380,6 +340,7 @@ async function createOrderPrepaid(req, res) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    const authHeader = req.headers.authorization;
     const verificationResult = await verifyPayment(
       razorpay_payment_id,
       razorpay_order_id,
@@ -389,6 +350,15 @@ async function createOrderPrepaid(req, res) {
       return res.status(400).json({ message: verificationResult.message });
     }
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const customToken = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(customToken);
     const user = await User.findById(userId).populate("cart.productId");
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -416,7 +386,6 @@ async function createOrderPrepaid(req, res) {
     const deliveryPrice = await calculateDeliveryPrice({
       pickup_postcode: primaryAddress.pin_code,
       delivery_postcode: address.pincode,
-      weight: dimensions.totalWeight,
       cod: 0,
       dimensions,
     });
@@ -453,7 +422,7 @@ async function createOrderPrepaid(req, res) {
       billing_state: address.state,
       billing_country: address.country || "India",
       billing_email: user.mail,
-      billing_phone: user.phone?.toString() || "",
+      billing_phone: address.addressContact?.toString() || "",
       shipping_is_billing: true,
       order_items: user.cart.map((item) => ({
         name: item.productId.name,
@@ -516,15 +485,24 @@ async function createOrderPrepaid(req, res) {
 
 async function getOrder(req, res, next) {
   try {
-    const { userId, orderId } = req.params;
+    const { orderId } = req.params;
 
-    if (!userId || !orderId) {
+    if (!orderId) {
       return res
         .status(400)
         .json({ message: "Invalid format or missing parameters." });
     }
+    const authHeader = req.headers.authorization;
 
-    const user = await User.findOne({ _id: userId, orders: orderId });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const customToken = authHeader.split(" ")[1];
+    const userId = await verifyToken(customToken);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User or order not found." });
     }
@@ -552,14 +530,14 @@ async function getOrder(req, res, next) {
       token = await authenticate();
     }
 
-    const { status, trackingData } = await fetchShiprocketOrderAndTracking(
-      order.shiprocketId
-    );
+    const { status, trackingData, deliveryDate } =
+      await fetchShiprocketOrderAndTracking(order.shiprocketId);
 
     return res.status(200).json({
       order: transformedOrder,
       status,
       trackingData,
+      deliveryDate,
     });
   } catch (error) {
     if (error.response?.status === 401) {
@@ -609,14 +587,23 @@ async function fetchShiprocketOrderAndTracking(shiprocketId) {
 
 async function cancelOrder(req, res) {
   try {
-    const { userId, orderId } = req.params;
+    const { orderId } = req.params;
 
-    if (!userId || !orderId) {
+    if (!orderId) {
       return res
         .status(400)
         .json({ message: "Invalid format or missing parameters." });
     }
+    const authHeader = req.headers.authorization;
 
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
+    }
+
+    const customToken = authHeader.split(" ")[1];
+    const userId = await verifyToken(customToken);
     const order = await Orders.findOne({ _id: orderId, userId });
     if (!order) {
       return res
@@ -659,7 +646,6 @@ module.exports = {
   createOrder,
   createOrderPrepaid,
   getDeliveryPrice,
-  setPayment,
   getOrder,
   cancelOrder,
 };

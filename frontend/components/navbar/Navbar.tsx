@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,44 +7,25 @@ import Image from "next/image";
 import Dropdown from "./Dropdown";
 import Search from "./Search";
 import OffCanvasMenu from "./OffCanvasMenu";
-import { FaShoppingBag, FaUser, FaBars } from "react-icons/fa";
+import { FaShoppingBag, FaBars } from "react-icons/fa";
 
 import img1 from "@/assets/Logo_02.png";
+import { toast } from "react-toastify";
+import { useUser } from "@/context/UserContext";
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isUserIdPresent, setIsUserIdPresent] = useState(false);
+  const { token } = useUser();
   const [showOffCanvasMenu, setShowOffCanvasMenu] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserId = localStorage.getItem("id");
-      setUserId(storedUserId);
-    }
-  }, []);
-  useEffect(() => {
-    const handleSubmission = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`
-        );
-        setIsUserIdPresent(response.ok);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    if (userId) {
-      handleSubmission();
-    }
-  }, [userId]);
-
   const accessCart = () => {
-    if (isUserIdPresent) {
+    if (token) {
       router.push("/cart");
     } else {
+      toast.warning("Please log in to access your cart.", {
+        position: "top-center",
+      });
       router.push("/login");
     }
   };
@@ -61,6 +42,7 @@ export default function Navbar() {
           />
         </Link>
       </div>
+
       <div className="flex items-center justify-between w-full relative bg-[#40773b] px-4">
         <div className="lg:hidden md:hidden">
           <FaBars
@@ -72,57 +54,32 @@ export default function Navbar() {
             onClose={() => setShowOffCanvasMenu(false)}
           />
         </div>
+
         <div className="hidden md:flex flex-grow gap-2 md:gap-3 lg:gap-4 2xl:gap-5 relative items-center">
-          <div
-            className={`text-[16px] duration-150 ease-out ${
-              pathname === "/"
-                ? "text-[#6b986a]"
-                : "hover:text-[#6b986a] text-white"
-            }`}
-          >
-            <Link href="/">Home</Link>
-          </div>
-          <div
-            className={`text-[16px] duration-150 ease-out ${
-              pathname === "/aboutus"
-                ? "text-[#6b986a]"
-                : "hover:text-[#6b986a] text-white"
-            }`}
-          >
-            <Link href="/aboutus">Our Story</Link>
-          </div>
-          <div
-            className={`text-[16px] duration-150 ease-out ${
-              pathname === "/shop"
-                ? "text-[#6b986a]"
-                : "hover:text-[#6b986a] text-white"
-            }`}
-          >
-            <Link href="/shop">Our Products</Link>
-          </div>
-          <div
-            className={`text-[16px] duration-150 ease-out ${
-              pathname === "/contact"
-                ? "text-[#6b986a]"
-                : "hover:text-[#6b986a] text-white"
-            }`}
-          >
-            <Link href="/contact">Contact</Link>
-          </div>
+          {["/", "/aboutus", "/shop", "/contact"].map((path, index) => {
+            const labels = ["Home", "Our Story", "Our Products", "Contact"];
+            return (
+              <div
+                key={index}
+                className={`text-[16px] duration-150 ease-out ${
+                  pathname === path
+                    ? "text-[#6b986a]"
+                    : "hover:text-[#6b986a] text-white"
+                }`}
+              >
+                <Link href={path}>{labels[index]}</Link>
+              </div>
+            );
+          })}
         </div>
+
         <div className="flex items-center gap-3 sm:gap-5 h-12">
           <Search />
           <FaShoppingBag
             className="size-[21px] sm:size-[23px] md:size-[25px] lg:size-[27px] 2xl:size-[29px] text-white cursor-pointer"
             onClick={accessCart}
           />
-          {isUserIdPresent ? (
-            <Dropdown />
-          ) : (
-            <Link href="/login">
-              <FaUser className="size-[21px] sm:size-[23px] md:size-[25px] lg:size-[27px] 2xl:size-[29px] text-white" />
-            </Link>
-          )}
+          <Dropdown />
         </div>
       </div>
     </div>

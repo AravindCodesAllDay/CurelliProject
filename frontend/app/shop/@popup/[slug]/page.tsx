@@ -6,6 +6,7 @@ import Rating from "@mui/material/Rating";
 import { toast } from "react-toastify";
 
 import Modal from "@/components/Modal";
+import { useUser } from "@/context/UserContext";
 
 interface ProductDetails {
   _id: string;
@@ -19,12 +20,11 @@ interface ProductDetails {
 
 export default function PopupCard({ params }: { params: { slug: string } }) {
   const router = useRouter();
+  const { token } = useUser();
   const slug = params.slug;
 
   const [details, setDetails] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const userId =
-    typeof window !== "undefined" ? localStorage.getItem("id") : null;
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -59,7 +59,7 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
   }, [slug, router]);
 
   const handleAddToCartOrWishlist = async (path: string, productId: string) => {
-    if (!userId) {
+    if (!token) {
       toast.warn("Please login to continue", {
         closeButton: true,
         pauseOnHover: true,
@@ -70,13 +70,13 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
 
     try {
       const listResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${path}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${path}/${productId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ userId, productId }),
         }
       );
 
@@ -131,7 +131,6 @@ export default function PopupCard({ params }: { params: { slug: string } }) {
               />
             </svg>
 
-            {/* Product Image */}
             <div className="xs:w-full sm:w-full md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/2 flex items-center justify-center">
               {details?.photos && (
                 <img

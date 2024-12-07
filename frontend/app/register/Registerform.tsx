@@ -3,18 +3,16 @@ import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-
 import axios from "axios";
+import { useUser } from "@/context/UserContext";
 import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
-
 import { FaEye } from "react-icons/fa";
-
 import google from "@/assets/google.png";
 
 export default function Registerform() {
   const router = useRouter();
-
+  const { token, logout, checkToken, setUserContext } = useUser();
   const [name, setName] = useState<string>("");
   const [mail, setMail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
@@ -26,52 +24,55 @@ export default function Registerform() {
   const [user, setUser] = useState<any>(null);
   const [wrongPswd, setWrongPswd] = useState<boolean>(false);
 
+  const isPasswordStrong = (password: string): boolean => {
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    return regex.test(password);
+  };
+
+  useEffect(() => {
+    if (token) {
+      checkToken().then((isValid) => {
+        if (isValid) {
+          router.push("/");
+        } else {
+          logout();
+        }
+      });
+    }
+  }, [router]);
+
   const handleSubmission = async (e: FormEvent) => {
     e.preventDefault();
 
-    const trimmedPswd = pswd.trim();
-    const trimmedConfirmPswd = confirmPswd.trim();
+    if (!isPasswordStrong(pswd)) {
+      toast.error(
+        "Password must be at least 8 characters with 1 letter and 1 number."
+      );
+      return;
+    }
 
-    if (trimmedPswd === trimmedConfirmPswd) {
-      try {
-        setLoading(true);
-
-        const checkResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${mail}`
-        );
-
-        if (checkResponse.ok) {
-          toast.error("User already exists. Please login.");
-          router.push("/login");
-          return;
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/register`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name, mail, phone, pswd: trimmedPswd }),
-          }
-        );
-
-        if (!response.ok) {
-          toast.error("Registration failed. Please try again.");
-          return;
-        }
-
-        toast.success("User created successfully.");
-        router.push("/login");
-      } catch (error) {
-        console.error("Error during registration:", (error as Error).message);
-        toast.error("Error during registration. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    } else {
+    if (pswd.trim() !== confirmPswd.trim()) {
       setWrongPswd(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/register`,
+        { name, mail, phone, pswd: pswd.trim() }
+      );
+      if (response.status === 201) {
+        toast.success("User registered successfully.");
+        router.push("/login");
+      } else {
+        toast.error(response.data.message || "Registration failed.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,8 +120,7 @@ export default function Registerform() {
           );
           if (result.ok) {
             const data = await result.json();
-            localStorage.setItem("id", data._id);
-            localStorage.setItem("name", data.name);
+            setUserContext(data.name, data._id);
             router.push("/");
           }
         })
@@ -247,28 +247,35 @@ export default function Registerform() {
           </button>
         </form>
         <p className="text-start mt-4">
-          By creating an account or logging in, you agree to Curelli Foods{" "}
+          By creating an account, you agree to the{" "}
           <Link
             href="/policy"
-            className=" font-semibold cursor-pointer hover:text-[#2a64ba] text-[#277933]"
+            className="text-[#277933] underline font-semibold"
           >
-            Privacy Policy.
+            Terms and Conditions
           </Link>
         </p>
-        <hr className="my-3" />
-        <button
-          className="submit-button text-black p-2 border-2 my-2 rounded-full flex items-center justify-center w-full"
-          onClick={() => login()}
-        >
-          <Image src={google} alt="google logo" className="size-6 mr-2" />
-          <p className="font-semibold">Signup with Google</p>
-        </button>
-        <button
-          className="submit-button text-black p-2 border-2 rounded-full flex items-center justify-center font-semibold hover:bg-[#277933] hover:text-white w-full"
-          onClick={() => router.push("/login")}
-        >
-          Existing Account
-        </button>
+        <div className="flex justify-between items-center mt-4 gap-3">
+          <div className="flex-1 border-t border-gray-400"></div>
+          <p className="text-center text-[#277933]">OR</p>
+          <div className="flex-1 border-t border-gray-400"></div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center mt-6 gap-3">
+          <button
+            onClick={() => login()}
+            className="border-[1px] w-full flex justify-center items-center px-6 py-2 rounded-md border-[#277933] bg-[#f4f4f4]"
+          >
+            <Image src={google} alt="Google" width={24} height={24} />
+            <span className="font-semibold ml-3">Sign up with Google</span>
+          </button>{" "}
+          <button
+            className="border-[2px] p-2 rounded w-full"
+            onClick={() => router.push("/login")}
+          >
+            Existing Account
+          </button>
+        </div>
       </div>
     </div>
   );

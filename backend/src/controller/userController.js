@@ -1,55 +1,75 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
-const mongoose = require("mongoose");
+const { createToken, verifyToken } = require("./tokenController");
 
-exports.getUsers = async (req, res) => {
+async function getUser(req, res) {
   try {
-    const users = await User.find({});
-    return res.status(200).json(users);
-  } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
+    const authHeader = req.headers.authorization;
 
-exports.getUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid request" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing or invalid" });
     }
-    const user = await User.findById(userId);
+
+    const token = authHeader.split(" ")[1];
+
+    const userId = await verifyToken(token);
+
+    const user = await User.findById(userId).populate("cart.productId");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    return res.status(200).json(user);
+
+    const cartItems = user.cart
+      .filter((item) => item.productId && item.productId.status === "inStock")
+      .map((item) => ({
+        productId: item.productId._id,
+        name: item.productId.name,
+        photos: item.productId.photos,
+        price: item.productId.price,
+        quantity: item.quantity,
+      }));
+
+    const userResponse = {
+      ...user.toObject(),
+      cart: cartItems,
+    };
+
+    return res.status(200).json(userResponse);
   } catch (error) {
-    console.error(error.message);
+    console.error("Error in getUser:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.googleLogin = async (req, res) => {
+async function googleLogin(req, res) {
   try {
     const { name, mail } = req.body;
+
     if (!name || !mail) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
+
     let user = await User.findOne({ mail });
     if (user) {
-      return res.status(200).json(user);
+      const token = await createToken(user._id);
+      return res.status(200).json({ token, name });
     }
-    user = await User.create({ name, mail, isgoogle: false });
-    return res.status(201).json(user);
+
+    user = await User.create({ name, mail, isgoogle: true });
+    const token = await createToken(user._id);
+
+    return res.status(201).json({ token, name });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error in googleLogin:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.login = async (req, res) => {
+async function login(req, res) {
   try {
     const { pswd, mail } = req.body;
 
@@ -75,14 +95,16 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Password doesn't match." });
     }
 
-    return res.status(200).json(user);
+    const token = await createToken(user._id);
+
+    return res.status(200).json({ token, name: user.name });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error in login:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.register = async (req, res) => {
+async function register(req, res) {
   try {
     const { name, mail, phone, pswd } = req.body;
 
@@ -99,45 +121,51 @@ exports.register = async (req, res) => {
 
     const existingUser = await User.findOne({ mail });
     if (existingUser) {
-      return res.status(409).json({ message: "Email is already in use." }); // 409 Conflict
+      return res.status(409).json({ message: "Email is already in use." });
     }
 
     const hashedPassword = await bcrypt.hash(pswd, 10);
 
-    const newUser = {
+    const newUser = new User({
       name,
       mail,
       phone,
       isgoogle: false,
       pswd: hashedPassword,
-    };
-    const user = await User.create(newUser);
+    });
 
-    return res.status(201).json(user);
+    await newUser.save();
+    return res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Internal Server Error" }); // 500 Internal Server Error
+    console.error("Error in register:", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
 
-exports.changePswd = async (req, res) => {
+async function changePswd(req, res) {
   try {
     const { newPswd, userId } = req.body;
+
     if (!newPswd || !userId) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     const hashedPassword = await bcrypt.hash(newPswd, 10);
     user.pswd = hashedPassword;
     await user.save();
+
     return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error in changePswd:", error.message);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}
+
+module.exports = { getUser, googleLogin, login, register, changePswd };
